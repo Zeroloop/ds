@@ -1,8 +1,5 @@
 <?lassoscript
 
-local(root) = {}->callsite_file->split('/')->removelast & join('/') + '/'
-
-
 with path in (:
 	'sequential.lasso',
 	'tables.lasso',
@@ -19,9 +16,7 @@ with path in (:
 		)
 	}
 	stdout('\t' + #path + ' - ')
-	sourcefile(file_read(#root+#path)->asstring,#path,false,false)()
-	
-	//lassoapp_include(#path)
+	lassoapp_include(#path)
 }
 stdoutnl('\tdone')
 
