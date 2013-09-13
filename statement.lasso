@@ -281,7 +281,8 @@ define insert_statement => type {
 	}
 
 
-	public into(table::string,...) 	=> .copy->switch(::into,array(#table)) => givenblock->merge(::columns,#rest || staticarray) => givenblock	
+	public into(table::string,...) 	=> .copy->switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
+	public into(table::string,...) 	=> .copy->switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
 
 	public into(table::tag,...) 	=> .copy->switch(::into,array(#table->asstring))->merge(::columns,#rest || staticarray) => givenblock
 
@@ -339,6 +340,20 @@ define insert_statement => type {
 		.'values'->insert('('+#r->join(',')+')')
 		return .invoke(!givenblock) => givenblock
 	}
+
+	public row(p::map) => {
+		local(r) = array
+		
+		.'columns' = array
+		
+		with col in #p->keys do {
+			.'columns'->insert(#col)
+			#r->insert(#p->find(#col))
+		}
+		.addrow(#r)	
+		return .invoke(!givenblock) => givenblock
+	}	
+
 
 	public addrow(p::map) => {
 		local(r) = array
