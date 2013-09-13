@@ -17,7 +17,7 @@ define ds_connections => {
 		web_request ? define_atend({
 			ds_connections->foreach => {#1->close}
 		})
-	}
+	} 
 	return $__ds_connections__
 }
 
@@ -462,6 +462,7 @@ define ds => type{
 
 	}
 	
+	public results => .'results' 
 	public removeall => { .'results' = staticarray }
 	public first => .'results'->first || ds_result
 	public last => .'results'->last || ds_result
@@ -485,6 +486,12 @@ define ds => type{
 	public pop => {
 		inline_scopepop
 		result_pop
+	} 
+	
+	public do(gb::capture) => {
+		.results->foreach => {
+			#gb(#1)
+		}
 	}
 	
 //---------------------------------------------------------------------------------------
