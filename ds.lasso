@@ -71,6 +71,31 @@ define ds => type{
 			-table 		= #s->second || '' 
 		) => givenblock
 	}
+
+	//	Fast host accessor — ds(::mysqlds,'127.0.0.1','product','list')
+
+	public oncreate(
+		datasource::tag,
+		host::string,
+		databasetable::tag,
+		username::string='',
+		password::string='',
+		port::integer=3306
+	) => {
+	
+		local(s) = #databasetable->asstring->splitextension('.')
+	
+		.oncreate(
+			-datasource = #datasource->asstring,
+			-database 	= #s->first,
+			-table 		= #s->second || '' 	
+			-host 		= #host,
+			-username 	= #username,
+			-password 	= #password,
+			-port 		= #port 		
+		) => givenblock
+		
+	}
 	
 	//	Fast host accessor — ds(::mysqlds,'127.0.0.1','product','list')
 	
