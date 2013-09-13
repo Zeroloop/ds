@@ -88,7 +88,7 @@ define ds => type{
 		.oncreate(
 			-datasource = #datasource->asstring,
 			-database 	= #s->first,
-			-table 		= #s->second || '' 	
+			-table 		= #s->second || '',	
 			-host 		= #host,
 			-username 	= #username,
 			-password 	= #password,
@@ -789,8 +789,6 @@ define ds => type{
 define dsinline(...) => {
 	return ds(dsinfo->extend(:#rest || staticarray),true,params) => givenblock	
 }
-
-
 
 define dsinfo->extend(...) => {
 
