@@ -1,7 +1,7 @@
 Datasource
 ==
 
-Datasource (DS) — a modern high performance replacement for Lasso inline
+Datasource (ds) — a modern high performance replacement for Lasso inline
 
 To install export to your LassoApp folder:
 
