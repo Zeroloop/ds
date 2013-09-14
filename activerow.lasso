@@ -36,27 +36,27 @@ define active_row => type {
 		return self
 	}
 	public oncreate(ds::ds) => {
-		debug('oncreate ds')
+//!		debug('oncreate ds')
 		.'ds' = #ds
 		return self
 	}
 
 	public oncreate(keyvalue::string) => {
 		.row = .ds->getrow(#keyvalue)
-		debug('oncreate keyvalue::string' = .isnew)
+//!		debug('oncreate keyvalue::string' = .isnew)
 		return self
 	}
 
 	public oncreate(keyvalue::integer) => {
 		.row = .ds->getrow(.table,#keyvalue) 
-		debug('oncreate keyvalue::integer' = .isnew)
+//!		debug('oncreate keyvalue::integer' = .isnew)
 		return self
 	}
 
 	public oncreate(key::pair,...) => {
 		.row = .ds->getrow(.table,#key)
 		.updatedata(params)
-		debug('oncreate keyvalue::integer' = .isnew)
+//!		debug('oncreate keyvalue::integer' = .isnew)
 		return self
 	}
 	
@@ -163,7 +163,7 @@ define active_row => type {
 		.update 
 	}
 	
-	public update => debug => {
+	public update => {
 
 		local(row) = .row
 
@@ -191,7 +191,7 @@ define active_row => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public create => debug => {
+	public create => {
 		local(row) = .row
 		
 		//	Should we create a row when no data? — it should probably cause an error
@@ -235,7 +235,7 @@ define active_row => type {
 		return .save
 	}
 
-	public save(ds::ds=.ds) => debug => {
+	public save(ds::ds=.ds) => {
 		local(row) = .row
 	
 		if(#row->keyvalue) => {

@@ -15,7 +15,13 @@ define ds_connections => {
 	if(var(::__ds_connections__)->isnota(::sequential)) => {
 		$__ds_connections__ = sequential
 		web_request ? define_atend({
-		//	ds_connections->foreach => {#1->close}
+			
+			ds_connections->foreach => {
+				//stdout(#1->key+': ')
+				#1->close
+				//stdoutnl('closed')
+				
+			}
 		})
 	} 
 	return $__ds_connections__
@@ -375,8 +381,7 @@ define ds => type{
 
 	public close => {
 		.dsinfo->action = lcapi_datasourceCloseConnection
-		.invoke
-		//.capi->invoke(.dsinfo)
+		.'capi'->invoke(.dsinfo)
 	}
 	
 	public notyet => {
@@ -461,7 +466,6 @@ define ds => type{
 		}()
 		
 		#gb ? handle => {
-			debug('pop')
 			.pop
 		}
 

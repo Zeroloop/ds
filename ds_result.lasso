@@ -158,15 +158,13 @@ define ds_result => type {
 		return .'dsrows' := #rows		
 	}	
 
-	public rows(type::tag) => debug => {
+	public rows(type::tag) => {
 		local(
 			gb = givenblock,
 			out = array,
 			row
 		) 
 		
-		debug('rows')
-			
 		.rows->foreach => {
 			#row = \#type()
 			#row->oncreate(#1)
