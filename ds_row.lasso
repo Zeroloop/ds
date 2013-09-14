@@ -151,6 +151,9 @@ define ds_row => type{
 		//!debug('ds_update' = .modified_data)
 		.modified_data->size
 		? .ds->update(self)
+		
+		//	? .ds->execute(::update,.table->asstring,.keyvalues,.modified_data->eachpair->asstaticarray)
+	
 	}
 
 //---------------------------------------------------------------------------------------

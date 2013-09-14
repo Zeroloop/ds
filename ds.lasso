@@ -12,14 +12,22 @@
 //---------------------------------------------------------------------------------------
 
 define ds_connections => {
-	if(var(::__ds_connections__)->isnota(::map)) => {
-		$__ds_connections__ = map
+	if(var(::__ds_connections__)->isnota(::sequential)) => {
+		$__ds_connections__ = sequential
 		web_request ? define_atend({
-			ds_connections->foreach => {#1->close}
+		//	ds_connections->foreach => {#1->close}
 		})
 	} 
 	return $__ds_connections__
 }
+
+//---------------------------------------------------------------------------------------
+//
+// 	datasource — english relay
+//
+//---------------------------------------------------------------------------------------
+
+define datasource(...) => ds(:#rest || staticarray)
 
 //---------------------------------------------------------------------------------------
 //
@@ -367,7 +375,8 @@ define ds => type{
 
 	public close => {
 		.dsinfo->action = lcapi_datasourceCloseConnection
-		.capi->invoke(.dsinfo)
+		.invoke
+		//.capi->invoke(.dsinfo)
 	}
 	
 	public notyet => {
@@ -405,8 +414,7 @@ define ds => type{
 			cols,
 			col 
 		)
-		
-		
+	
 		fail_if(not #capi, 'No datasource: check -database, -table or -datasource')
 		
 		//	Store connection for re-use
@@ -419,7 +427,7 @@ define ds => type{
 				
 				if(error_code) => {
 					protect => {
-						debug(#dsinfo->statement = #error)
+						debug(#dsinfo->statement)
 					}
 					stdoutnl('\nds error: '+error_msg+'\n')
 				}
@@ -430,8 +438,9 @@ define ds => type{
 		
 		#error->get(1) ? fail(#error->get(1),#error->get(2))
 		
-//! Set keycolumns now? For row, needed for updates.
-		
+		//! Set keycolumns now? Need by row for updates.
+		.keycolumn = .keycolumn
+				
 		{
 			#set = #dsinfo->getset(#s)
 			#set
@@ -457,7 +466,7 @@ define ds => type{
 		}
 
 		.'results' = #results->asstaticarray
-		
+
 		return (#gb ? #gb(#results->first)) or self
 
 	}
@@ -599,12 +608,12 @@ define ds => type{
 //
 //---------------------------------------------------------------------------------------
 
-	private execute(
+	public execute(
 		action::tag,
 		table::string,
 		keyvalues::staticarray,
 		values::staticarray
-	) => debug => {
+	) => {
 
 		//	New dsinfo
 		.dsinfo = .dsinfo->makeinheritedcopy
