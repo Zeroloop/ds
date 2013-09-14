@@ -1,7 +1,7 @@
 <?lassoscript
 //=======================================================================================
 //
-//	DS  for Lasso 9 — Free to use, license TBD
+//	DS for Lasso 9 — Free to use, license TBD
 //
 //..All rights reserved — K Carlton 2013.................................................
 

@@ -487,13 +487,7 @@ define ds => type{
 		inline_scopepop
 		result_pop
 	} 
-	
-	public do(gb::capture) => {
-		.results->foreach => {
-			#gb(#1)
-		}
-	}
-	
+		
 //---------------------------------------------------------------------------------------
 //
 // 	Result iterator
@@ -503,6 +497,12 @@ define ds => type{
 	public foreach => {
 		local(gb) = givenblock
 		.'results'->foreach => {#gb(#1)}
+	}
+
+	public do(gb::capture) => {
+		.results->foreach => {
+			#gb(#1)
+		}
 	}
 
 //---------------------------------------------------------------------------------------
@@ -809,9 +809,9 @@ define dsinfo->extend(...) => {
 		name,val,keyvalue,isparam
 	)
 
-	with p in #rest do {
+	with p in delve(#rest) do {
 		//	Clean up legacy '-string' support
-		if(#p->isa(::pair) && #p->first->beginswith('-')) => {
+		if(#p->isa(::pair) && #p->first->isa(::string) && #p->first->beginswith('-')) => {
 			#p->first->removeleading('-')
 			#isparam = true
 		else
@@ -942,8 +942,5 @@ define dsinfo->extend(...) => {
 	return #dsinfo
 	
 }
-
-
-
 
 ?>
