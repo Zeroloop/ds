@@ -194,9 +194,5 @@ define ds_result => type {
 			.affected +' affected)'
 		)
 	}
-
-	
 }
-
-
 ?>
