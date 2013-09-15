@@ -15,12 +15,10 @@ define ds_connections => {
 	if(var(::__ds_connections__)->isnota(::sequential)) => {
 		$__ds_connections__ = sequential
 		web_request ? define_atend({
-			
 			ds_connections->foreach => {
 				//stdout(#1->key+': ')
 				#1->close
-				//stdoutnl('closed')
-				
+				//stdoutnl('closed')	
 			}
 		})
 	} 
@@ -414,6 +412,7 @@ define ds => type{
 			set,
 			result,
 			error,
+			affected,
 			
 			index,
 			cols,
@@ -448,9 +447,11 @@ define ds => type{
 				
 		{
 			#set = #dsinfo->getset(#s)
+			#affected = integer(var(::__updated_count__))
+			
 			#set
-			? #result = ds_result(#set,#dsinfo,#error,#s->ascopy)
-			| #result = ds_result(indextable,array,staticarray,0,integer(var(::__updated_count__)),#error,#s->ascopy)
+			? #result = ds_result(#set,#dsinfo,0,#error,#s->ascopy)
+			| #result = ds_result(indextable,array,staticarray,0,#affected,#error,#s->ascopy)
 
 			//	Set result number
 			#result->num = #s->ascopy
@@ -831,7 +832,7 @@ define dsinfo->extend(...) => {
 			#isparam = false
 		}
 		
-		//	Only evaluate pairs
+		//	Only evaluate params 
 		if( #p->isa(::keyword) || #isparam) => {
 			#name = #p->name
 			#val = #p->value

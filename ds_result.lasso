@@ -38,10 +38,13 @@ define ds_result => type {
 	public oncreate(
 		set::staticarray,
 		ds::dsinfo,
+		affected::integer,
 		error::staticarray,
 		num::integer
 	) => {
 		.dsinfo = #ds
+		.affected = #affected
+		
 		.oncreate(#set,#error,#num)
 	}
 
