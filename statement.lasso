@@ -26,8 +26,8 @@ define statement => type {
 	public ds 		=> .'ds'
 	public copyself => .'copyself'
 	
-	//	Always return a copy if being used with a DS (slower but required)
-	public copy 	=> self // .'copyself' ? .ascopy | self
+	//	Always return a copy if being used with a data source (slower but required)
+	public copy 	=> .'copyself' ? .ascopy | self
 
 //---------------------------------------------------------------------------------------
 //
@@ -167,23 +167,28 @@ define select_statement => type {
 	public join(table::string,...) 		=> .copy->merge(::join,params) => givenblock
 	public where(expr::string,...)		=> .copy->merge(::where,params) => givenblock
 	public where(expr::pair,...)		=> {
+		local(out) = .copy
+	
 		with item in params do {
 			#item->isanyof(::pair,::keyword)
-			? .where(#item->name->asstring + ' = ' + .encode(#item->value))
-			| .where(#item)
-		}		
-		return .copy->invoke(!givenblock) => givenblock
+			? #out = #out->where(#item->name->asstring + ' = ' + .encode(#item->value))
+			| #out = #out->where(#item)
+		}	
+		
+		return #out->invoke(!givenblock) => givenblock
 	}
 	public orderby(columns::string) 	=> .copy->merge(::orderby,params) => givenblock
 	public groupby(columns::string,...) => .copy->merge(::groupby,params) => givenblock
 	public having(expr::string,...)		=> .copy->merge(::having,params) => givenblock
 	public having(expr::pair,...)		=> {			
+		local(out) = .copy
+
 		with item in params do {
 			#item->isanyof(::pair,::keyword)
-			? .merge(::having,#item->name->asstring+' = '+.encode(#item->value))
-			| .having(#item)
+			? #out = #out->merge(::having,#item->name->asstring+' = '+.encode(#item->value))
+			| #out = #out->having(#item)
 		}
-		return .copy->invoke(!givenblock) => givenblock
+		return #out->invoke(!givenblock) => givenblock
 	}
 	public limit(expr::string) 					=> .copy->switch(::limit,array(#expr)) => givenblock
 	public limit(max::integer) 					=> .copy->switch(::limit,array('0,'+#max)) => givenblock
@@ -227,7 +232,7 @@ define select_statement => type {
 	public limit	=> .ifsize(.'limit',	'LIMIT ',)
 
 	public merge(target::tag,values::staticarray) => {
-	
+
 		match(#target) => {
 			case(::select)
 				.'select'->insertfrom(#values)
@@ -246,6 +251,7 @@ define select_statement => type {
 			case(::limit)
 				.'limit'->insertfrom(#values)
 		}
+		
 		return .invoke(!givenblock) => givenblock
 	}
 
