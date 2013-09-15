@@ -98,7 +98,7 @@ define table => type {
 
 //-----------------------------------------------------------------------------------------
 //
-// 	hashtable — very fast for large number of keys (2 - 3x fasters than map), 
+// 	hashtable — very fast for large number of keys (2 - 3x faster than map), 
 //				slowish create time (16 micros vs 5 for map) namely due to index
 //
 //-----------------------------------------------------------------------------------------

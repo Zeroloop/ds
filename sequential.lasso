@@ -1,7 +1,7 @@
 <?lassoscript
 //-----------------------------------------------------------------------------------------
 //
-// 	Simple fast list table, insert sorting can probably be removed
+// 	Simple linked list (insert sorting can probably be removed)
 //
 //-----------------------------------------------------------------------------------------
 
