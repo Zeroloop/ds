@@ -116,10 +116,6 @@ define ds_row => type{
 	public insert(pair::pair) => {
 		.'modified_data'->insert(#pair)
 	}
-	//	Basic insert support...
-	public set(pair::pair) => {
-		.'modified_data'->insert(#pair)
-	}
 
 //---------------------------------------------------------------------------------------
 //
@@ -141,6 +137,13 @@ define ds_row => type{
 //
 //---------------------------------------------------------------------------------------
 
+	public invoke=(val,col::tag) 	=> .update(#col = #val)
+	public invoke=(val,col::string) => .update(#col = #val)
+
+	public set(pair::pair) 			=> .update(#pair)
+	public set=(val,col::tag) 		=> .update(#col = #val)
+	public set=(val,col::string) 	=> .update(#col = #val)
+	
 	public update(pair::pair,...) => .update(tie(staticarray(#pair),#rest || staticarray)->asstaticarray)
 	public update(data::trait_keyedForEach) => .update(#data->eachPair->asstaticarray)
 	public update(values::staticarray) => {

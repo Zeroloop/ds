@@ -70,7 +70,15 @@ define active_row => type {
 	public keyvalue => .row->keyvalue
 	public created	=> .creation_column		? self(.creation_column)
 	public modified => .modification_column	? self(.modification_column)
+	public columns	=> {
+		local(cols) = .row->columns
+		
+		#cols->size ? return #cols
+		
+		return .ds->columns || #cols
 
+	}
+	
 	public isnew => not .keyvalue	
 	public asnew => {
 		local(out) = self->ascopy
@@ -156,6 +164,13 @@ define active_row => type {
 //
 //---------------------------------------------------------------------------------------
 
+	public invoke=(val,col::tag) 	=> .update(#col = #val)
+	public invoke=(val,col::string) => .update(#col = #val)
+
+	public set(pair::pair) 			=> .update(#pair)
+	public set=(val,col::tag) 		=> .update(#col = #val)
+	public set=(val,col::string) 	=> .update(#col = #val)
+	
 	public update(pair::pair,...) => .update(params)
 	public update(data::trait_keyedforeach) => .update(#data->eachpair->asstaticarray)
 	public update(values::staticarray) => {
@@ -196,7 +211,6 @@ define active_row => type {
 		
 		//	Should we create a row when no data? — it should probably cause an error
 		//	Inline just fails at the data source
-		//	not #row->modified->size ? fail('No row data')
 
 		.generate_uuid ? #row->insert(
 			.keycolumn = lasso_uniqueid
