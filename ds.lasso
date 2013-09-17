@@ -358,7 +358,7 @@ define ds => type{
 //-----------------------------------------------------------
 	
 	public sql(
-		statement::string,maxrows::integer=50
+		statement::string,maxrows::integer = .dsinfo->maxrows || 50
 	) => {
 		
 		//	Clear old results
