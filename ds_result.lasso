@@ -5,10 +5,22 @@
 //
 //............................................................................
 
-define result					=> thread_var_get(::__ds_results)
+define result					=> result(1) 
+define result(setnum::integer)	=> {
+	local(results) = results
+	
+	if(#results->isa(::staticarray)) => {
+		#setnum > #results->size || #setnum < 1 
+		? fail('Invalid setnum: ' + #setnum)
+		return #results->get(#setnum)
+	else
+		return ds_result(#setnum)		
+	}
+}
+
+define results					=> thread_var_get(::__ds_results)
 define result_push(p::any) 		=> thread_var_push(::__ds_results,#p)
 define result_pop 				=> thread_var_pop(::__ds_results)
-define result(setnum::integer)	=> ds_result(#setnum)
 
 //============================================================================
 //
@@ -21,6 +33,7 @@ define ds_result => type {
 		public index::trait_searchable,
 		public cols::trait_foreach,
 		public rows::staticarray,
+		public set::staticarray,
 		public found::integer=0,
 		public affected::integer=0,
 		public num::integer=0,
@@ -76,6 +89,7 @@ define ds_result => type {
 		.'cols'			= #cols
 		.'index'		= #index
 		.'rows' 		= #rows
+		.'set' 			= #set
 		.'found'		= #found
 		.'affected' 	= #affected
 		.'error' 		= #error
@@ -87,6 +101,7 @@ define ds_result => type {
 		index::trait_searchable,
 		cols::trait_foreach,
 		rows::staticarray,
+		set::staticarray,
 		found::integer=0,
 		affected::integer=0,
 		error::staticarray=.error_current,
@@ -95,7 +110,8 @@ define ds_result => type {
 		.'cols'			= #cols
 		.'index'		= #index
 		.'rows' 		= #rows
-		.'found'		= #found
+		.'set' 			= #set
+		.'found'		= #found		
 		.'affected' 	= #affected
 		.'error' 		= #error
 		.'num' 			= #num
@@ -109,12 +125,11 @@ define ds_result => type {
 	}
 
 	public oncreate(num::integer) => {	
-		//	Support standard inlines
 		local(
 			scope = inline_scopeget,
 			set = #scope ? #scope->find(::currentinline)->dsinfo->getset(#num)
 		)
-		#set->size ? .oncreate(#set,.error_current) 
+		#set->size ? .oncreate(#set,.error_current,#num) 
 
 		.'error' = .error_current
 		.'num'	 = #num
@@ -197,5 +212,38 @@ define ds_result => type {
 			.affected +' affected)'
 		)
 	}
+		
+//---------------------------------------------------------------------------------------
+//
+// 	Result iterator
+//
+//---------------------------------------------------------------------------------------
+
+	public foreach => {
+		local(gb) = givenblock
+		.rows->foreach => {#gb(#1)}
+	}
+
+	public do(gb::capture) => {
+		.rows->foreach => {
+			#gb(#1)
+		}
+	}
+		
+//---------------------------------------------------------------------------------------
+//
+// 	Shortcuts
+//
+//---------------------------------------------------------------------------------------
+
+	public first => .rows->first
+	public first(col::string) => .first->find(#col)
+	public first(col::tag) 	  => .first->find(#col->asstring)
+
+	public last => .rows->last
+	public last(col::string) => .last->find(#col)
+	public last(col::string) => .last->find(#col)
+	
+	
 }
 ?>

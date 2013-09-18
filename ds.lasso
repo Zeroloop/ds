@@ -455,17 +455,16 @@ define ds => type{
 
 			//	Set result number
 			#result->num = #s->ascopy
-
-			if(#gb && #s == 1 ) => {
-				.push(#set || staticarray,#result)
-			}
-
+			
 			#results->insert(#result)
 
 			#s++ < #dsinfo->numsets 
 			? currentcapture->restart  
 		}()
+
+//		results_push(#results)
 		
+		#gb ? .push(#results->asstaticarray)		
 		#gb ? handle => {
 			.pop
 		}
@@ -488,18 +487,18 @@ define ds => type{
 //
 //---------------------------------------------------------------------------------------
 
-	public push(set::staticarray,result::ds_result) => {
+	public push(results::staticarray) => {
 		local(scope) = map(
 			::currentinline	= self, 
-			::currentset 	= #set || (:(:),(:),0)
+			::currentset 	= ((#results->size ? #results->first->set) || (:(:),(:),0))
 		)
 		inline_scopepush(#scope)
-		result_push(#result)
+		result_push(#results)
 	}
 	
 	public pop => {
 		inline_scopepop
-		result_pop
+		result_pop 
 	} 
 		
 //---------------------------------------------------------------------------------------
@@ -710,7 +709,7 @@ define ds => type{
 
 //---------------------------------------------------------------------------------------
 //
-// 	Shortcuts
+// 	Get rows
 //
 //---------------------------------------------------------------------------------------
 
@@ -746,7 +745,8 @@ define ds => type{
 //
 //---------------------------------------------------------------------------------------	
 
-	public find(...) => .search(:#rest || staticarray)->rows
+
+	//public find(...) => .search(:#rest || staticarray)
 	
 	public search(...) => {
 		.dsinfo->extend(:#rest || staticarray)
@@ -755,17 +755,17 @@ define ds => type{
 		local(r) = .invoke => givenblock	
 		return #r
 	}
-	
-	public all => {
+
+	public all(maxrows::integer=.maxrows) => {
+		.dsinfo->maxrows = #maxrows
 		.dsinfo->action = lcapi_datasourcefindall
 		return .invoke => givenblock		
 	}
 
-	public all(type::tag) => {
-		.dsinfo->action = lcapi_datasourcefindall
-		return .invoke => givenblock		
-	}
-	
+	public findrows(...) => .search(:#rest || staticarray)->rows
+
+	public allrows(maxrows::integer=.maxrows) => .all(#maxrows)->rows
+
 
 //---------------------------------------------------------------------------------------
 //
@@ -778,12 +778,14 @@ define ds => type{
 
 	public firstrow => .rows->first
 	public firstrow(col::string) => .rows->first->find(#col)
+	public firstrow(col::tag) 	 => .rows->first->find(#col->asstring)
 
-	public lastrow => .rows->last
-	public lastrow(col::string) => .rows->last->find(#col)
+	public lastrow => .last->rows->last
+	public lastrow(col::string) => .last->rows->last->find(#col)
+	public lastrow(col::tag) 	=> .last->rows->last->find(#col->asstring)
 
-	public rows => .last->rows => givenblock
-	public rows(type::tag) => .last->rows(#type) => givenblock
+	public rows => .first->rows => givenblock
+	public rows(type::tag) => .first->rows(#type) => givenblock
 
 //---------------------------------------------------------------------------------------
 //
