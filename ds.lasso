@@ -145,7 +145,7 @@ define ds => type{
 		.actionparams = #params 
 		
 		return .oncreate(
-			-datasource = #dsinfo->hostdatasource,
+			-datasource = #dsinfo->hostdatasource || 'mysqlds',
 			-database 	= #dsinfo->databasename,
 			-table 		= #dsinfo->tablename,
 			-host 		= #dsinfo->hostname,
@@ -153,7 +153,7 @@ define ds => type{
 			-username 	= #dsinfo->hostusername,
 			-password 	= #dsinfo->hostpassword,
 			-port 		= integer(#dsinfo->hostport),	
-			-encoding	= #dsinfo->hosttableencoding,
+			-encoding	= #dsinfo->hosttableencoding || 'UTF-8',
 			-maxrows	= #dsinfo->maxrows,
 			-dsinfo		= #dsinfo,	//	Legacy: leverage dsinfo constructor
 			-useinfo	= #useinfo	//	Legacy: switch to trigger legacy mode
@@ -266,14 +266,15 @@ define ds => type{
 
 		//	Legacy: leverage clasic inlie constructor
 		if(#useinfo) => {
-			.'dsinfo' = #dsinfo->action
-			.'dsinfo' = #dsinfo->statement
-			.'dsinfo' = #dsinfo->statementonly
-			.'dsinfo' = #dsinfo->skiprows
-			.'dsinfo' = #dsinfo->keycolumns 	
-			.'dsinfo' = #dsinfo->inputcolumns
-			.'dsinfo' = #dsinfo->returncolumns
-			.'dsinfo' = #dsinfo->sortColumns
+			.'dsinfo'->action 			= #dsinfo->action
+			.'dsinfo'->statement 		= #dsinfo->statement
+			.'dsinfo'->statementonly 	= #dsinfo->statementonly
+			.'dsinfo'->skiprows 		= #dsinfo->skiprows
+			
+			#dsinfo->keycolumns 	? .'dsinfo'->keycolumns  = #dsinfo->keycolumns 	
+			#dsinfo->inputcolumns 	? .'dsinfo'->inputcolumns = #dsinfo->inputcolumns
+			#dsinfo->returncolumns 	? .'dsinfo'->returncolumns = #dsinfo->returncolumns
+			#dsinfo->sortColumns 	? .'dsinfo'->sortColumns 	= #dsinfo->sortColumns
 		}
 
 		//	Cheeky sql short cut — should be killed.
@@ -911,16 +912,16 @@ define dsinfo->extend(...) => {
 					?	#dsinfo->maxrows = -1
 					|	#dsinfo->maxrows = integer(#val)
 				case('sortcolumn','sortfield')
-					#sortcolumns->insert(#val,lcapi_datasourcesortascending)
+					#sortcolumns->insert(#val->asstring = lcapi_datasourcesortascending)
 				case('sortorder')
 					#sortcolumns->size 
 					? match(#val) => {
 						case('descending','desc')
-							#sortcolumns->last->value = lcapi_datasourcesortdescending
+							#sortcolumns->last->second = lcapi_datasourcesortdescending
 						case('ascending','asc')
-							#sortcolumns->last->value = lcapi_datasourcesortascending
+							#sortcolumns->last->second = lcapi_datasourcesortascending
 						case('custom')
-							#sortcolumns->last->value = lcapi_datasourcesortcustom
+							#sortcolumns->last->second = lcapi_datasourcesortcustom
 					}
 				case('returncolumn','returnfield')
 					#returncolumns->insert(#val)
