@@ -3,7 +3,7 @@
 //
 // 	Alternative ds_row
 //
-//	2013-08-31 - Imported update methods from active_row
+//	2013-08-31 - Imported update methods from activerow
 //
 //---------------------------------------------------------------------------------------
 

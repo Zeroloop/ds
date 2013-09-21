@@ -237,10 +237,13 @@ define ds_result => type {
 //---------------------------------------------------------------------------------------
 
 	public first => .rows->first
+	public firstrow(...) => .first(:#rest || staticarray)
+	
 	public first(col::string) => .first->find(#col)
 	public first(col::tag) 	  => .first->find(#col->asstring)
 
 	public last => .rows->last
+	public lastrow(...) => .first(:#rest || staticarray)
 	public last(col::string) => .last->find(#col)
 	public last(col::string) => .last->find(#col)
 	

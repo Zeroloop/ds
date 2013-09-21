@@ -94,7 +94,7 @@ define activerow => type {
 		//	Determin table based on type
 		local(t) = .type->asstring->lowercase &
 
-		! #t->endswith('s') && active_row_pluralise_tables
+		! #t->endswith('s') && activerow_pluralise_tables
 		? #t->append('s')
 		
 		return .'table' := #t
