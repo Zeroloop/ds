@@ -617,7 +617,8 @@ define ds => type{
 		action::tag,
 		table::string,
 		keyvalues::staticarray,
-		values::staticarray
+		values::staticarray,
+		firstrow::boolean=false
 	) => {
 
 		//	New dsinfo
@@ -638,9 +639,10 @@ define ds => type{
 		
 		//!debug('update keys' = .dsinfo->keycolumns)
 		//!debug('update input' = .dsinfo->inputcolumns)
+		
+		local(out) = .invoke => givenblock 
 				
-		return .invoke => givenblock
-
+		return #firstrow ? .firstrow | #out
 	}
 
 //---------------------------------------------------------------------------------------
@@ -649,24 +651,26 @@ define ds => type{
 //
 //---------------------------------------------------------------------------------------
 
-	public addrow(p::pair,...) => .execute(::add,.table,staticarray,params) => givenblock
-	public addrow(p::trait_keyedforeach) => .execute(::add,.table,staticarray,#p->eachpair->asstaticarray) => givenblock
+	public addrow(p::pair,...) => .execute(::add,.table,staticarray,params,true) => givenblock
+	public addrow(p::trait_keyedforeach) => .execute(::add,.table,staticarray,#p->eachpair->asstaticarray,true) => givenblock
 
 	public addrow(totable::string,data::trait_keyedforeach) => .execute(::add,
 		#totable,
 		staticarray,
-		#data->eachpair->asstaticarray
+		#data->eachpair->asstaticarray,
+		true
 	) => givenblock
 
 	public addrow(totable::tag,data::trait_keyedforeach) => .execute(::add,
 		#totable->asstring,
 		staticarray,
-		#data->eachpair->asstaticarray
+		#data->eachpair->asstaticarray,
+		true
 	) => givenblock
 
-	public addrow(totable::string,data::staticarray) => .execute(::add,#totable,staticarray,#data) => givenblock
+	public addrow(totable::string,data::staticarray) => .execute(::add,#totable,staticarray,#data,true) => givenblock
 
-	public addrow(totable::tag,data::staticarray) => .execute(::add,#totable->asstring,staticarray,#data) => givenblock
+	public addrow(totable::tag,data::staticarray) => .execute(::add,#totable->asstring,staticarray,#data,true) => givenblock
 
 //---------------------------------------------------------------------------------------
 //
@@ -785,8 +789,8 @@ define ds => type{
 	public lastrow(col::string) => .last->rows->last->find(#col)
 	public lastrow(col::tag) 	=> .last->rows->last->find(#col->asstring)
 
-	public rows => .first->rows => givenblock
-	public rows(type::tag) => .first->rows(#type) => givenblock
+	public rows => (.first->rows => givenblock) || staticarray
+	public rows(type::tag) => (.first->rows(#type) => givenblock) || staticarray
 
 //---------------------------------------------------------------------------------------
 //

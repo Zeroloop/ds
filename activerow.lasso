@@ -1,7 +1,7 @@
 <?lassoscript
 //=======================================================================================
 //
-//	Active_row for Lasso 9 — Free to use, license TBD
+//	Activerow for Lasso 9 — Free to use, license TBD
 //
 //..All rights reserved — K Carlton 2013.................................................
 
@@ -10,14 +10,14 @@ define activerow_default_timestamp_format => 'YYYY-mm-dd HH-MM-SS'
 define activerow_default_created_column => ''
 define activerow_default_modified_column => ''
 	
-define active_row => type {
+define activerow => type {
 	
 	data
 		private ds,
 		public database,
 		public table,
-		public row, //::ds_row = ds_row
-		
+		public row,
+				
 		// allow support for basic preferences
 		public created_column 	= activerow_default_created_column,
 		public modified_column 	= activerow_default_modified_column,
@@ -231,10 +231,7 @@ define active_row => type {
 		? #row->insert(
 			#row->keycolumn = null
 		)
-
-		.ds->addrow(.table,#row->modified_data) => {
-			#row = #1->rows->first			
-		}
+		#row = .ds->addrow(.table,#row->modified_data)
 		#row ? .'row' := #row | fail('Unable to create row')
 	}
 		
