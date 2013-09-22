@@ -67,7 +67,7 @@ define ds => type{
 
 	public oncreate(
 		database::string,
-		table::string
+		table::string = ''
 	) => .oncreate(
 		-database 	= #database,
 		-table 		= #table
@@ -84,7 +84,7 @@ define ds => type{
 		) => givenblock
 	}
 
-	//	Fast host accessor — ds(::mysqlds,'127.0.0.1','product','list')
+	//	Fast host accessor — ds(::mysqlds,'127.0.0.1',::product.list)
 
 	public oncreate(
 		datasource::tag,
@@ -761,7 +761,7 @@ define ds => type{
 		return #r
 	}
 
-	public all(maxrows::integer=.maxrows) => {
+	public all(maxrows::integer=-1) => {
 		.dsinfo->maxrows = #maxrows
 		.dsinfo->action = lcapi_datasourcefindall
 		return .invoke => givenblock		
@@ -769,7 +769,7 @@ define ds => type{
 
 	public findrows(...) => .search(:#rest || staticarray)->rows
 
-	public allrows(maxrows::integer=.maxrows) => .all(#maxrows)->rows
+	public allrows(maxrows::integer=-1) => .all(#maxrows)->rows
 
 
 //---------------------------------------------------------------------------------------
