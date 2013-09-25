@@ -25,9 +25,7 @@ define statement => type {
 	
 	public ds 		=> .'ds'
 	public copyself => .'copyself'
-	
-	//	Always return a copy if being used with a data source (slower but required)
-	public copy 	=> .'copyself' ? .ascopy | self
+	public copy 	=> self
 
 //---------------------------------------------------------------------------------------
 //
@@ -35,10 +33,16 @@ define statement => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public invoke(returnself::boolean=false) => {
-		#returnself
-		?	return self
-		|	return .ds->sql(.asstring) => givenblock		
+	public invoke => {
+		return .ds->sql(.asstring) => givenblock
+	}
+
+	public invokeifblock => {
+		if(givenblock) => {
+			return .invoke => givenblock
+		else
+			return self
+		}
 	}
 
 	/*	Invoke DS */
@@ -51,18 +55,18 @@ define statement => type {
 	
 //---------------------------------------------------------------------------------------
 //
-// 	Replace values
+//	Replace values
 //
 //---------------------------------------------------------------------------------------
 
 	public switch(target::tag,value::trait_foreach) => {
 		(.escape_member(tag(`'`+#target->asstring+`'=`)))->invoke(#value)
-		return .invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
 
 //---------------------------------------------------------------------------------------
 //
-// 	Better SQL encoder (leaves ints & decimals untouched, supports IN )
+//	SQL encoder (leaves ints & decimals untouched, supports IN )
 //
 //---------------------------------------------------------------------------------------
 
@@ -150,22 +154,22 @@ define select_statement => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public select(column::tag,...) 		=> .copy->switch(::select,params) => givenblock
-	public select(columns::array) 		=> .copy->switch(::select,#columns) => givenblock
-	public select(columns::string,...) 	=> .copy->switch(::select,params) => givenblock
+	public select(column::tag,...) 		=> .switch(::select,params) => givenblock
+	public select(columns::array) 		=> .switch(::select,#columns) => givenblock
+	public select(columns::string,...) 	=> .switch(::select,params) => givenblock
 
-	public from(tables::array) 			=> .copy->switch(::from,#tables) => givenblock
-	public join(tables::array) 			=> .copy->switch(::join,#tables) => givenblock
-	public where(expr::array)			=> .copy->switch(::where,#expr) => givenblock
-	public groupby(columns::array) 		=> .copy->switch(::groupby,#columns) => givenblock
-	public having(expr::array)			=> .copy->switch(::having,#expr) => givenblock
-	public orderby(columns::array) 		=> .copy->switch(::orderby,#columns) => givenblock
+	public from(tables::array) 			=> .switch(::from,#tables) => givenblock
+	public join(tables::array) 			=> .switch(::join,#tables) => givenblock
+	public where(expr::array)			=> .switch(::where,#expr) => givenblock
+	public groupby(columns::array) 		=> .switch(::groupby,#columns) => givenblock
+	public having(expr::array)			=> .switch(::having,#expr) => givenblock
+	public orderby(columns::array) 		=> .switch(::orderby,#columns) => givenblock
 
-	public from(table::tag,...) 		=> .copy->switch(::from,params->asarray) => givenblock
-	public from(table::string,...) 		=> .copy->switch(::from,params->asarray) => givenblock
+	public from(table::tag,...) 		=> .switch(::from,params->asarray) => givenblock
+	public from(table::string,...) 		=> .switch(::from,params->asarray) => givenblock
 
-	public join(table::string,...) 		=> .copy->merge(::join,params) => givenblock
-	public where(expr::string,...)		=> .copy->merge(::where,params) => givenblock
+	public join(table::string,...) 		=> .merge(::join,params) => givenblock
+	public where(expr::string,...)		=> .merge(::where,params) => givenblock
 	public where(expr::pair,...)		=> {
 		local(out) = .copy
 	
@@ -175,11 +179,11 @@ define select_statement => type {
 			| #out = #out->where(#item)
 		}	
 		
-		return #out->invoke(!givenblock) => givenblock
+		return #out->invokeifblock => givenblock
 	}
-	public orderby(columns::string) 	=> .copy->merge(::orderby,params) => givenblock
-	public groupby(columns::string,...) => .copy->merge(::groupby,params) => givenblock
-	public having(expr::string,...)		=> .copy->merge(::having,params) => givenblock
+	public orderby(columns::string) 	=> .merge(::orderby,params) => givenblock
+	public groupby(columns::string,...) => .merge(::groupby,params) => givenblock
+	public having(expr::string,...)		=> .merge(::having,params) => givenblock
 	public having(expr::pair,...)		=> {			
 		local(out) = .copy
 
@@ -188,11 +192,11 @@ define select_statement => type {
 			? #out = #out->merge(::having,#item->name->asstring+' = '+.encode(#item->value))
 			| #out = #out->having(#item)
 		}
-		return #out->invoke(!givenblock) => givenblock
+		return #out->invokeifblock => givenblock
 	}
-	public limit(expr::string) 					=> .copy->switch(::limit,array(#expr)) => givenblock
-	public limit(max::integer) 					=> .copy->switch(::limit,array('0,'+#max)) => givenblock
-	public limit(start::integer,max::integer) 	=> .copy->switch(::limit,array('0,'+#max)) => givenblock
+	public limit(expr::string) 					=> .switch(::limit,array(#expr)) => givenblock
+	public limit(max::integer) 					=> .switch(::limit,array('0,'+#max)) => givenblock
+	public limit(start::integer,max::integer) 	=> .switch(::limit,array('0,'+#max)) => givenblock
 
 //---------------------------------------------------------------------------------------
 //
@@ -252,7 +256,7 @@ define select_statement => type {
 				.'limit'->insertfrom(#values)
 		}
 		
-		return .invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
 
 //---------------------------------------------------------------------------------------
@@ -276,7 +280,9 @@ define insert_statement => type {
 			columns::array 	= array,
 			values::array 	= array,
 			update::array 	= array,
-			onduplicate		= array
+			onduplicate		= array,
+		public
+			doevery			= 0		
 
 	public oncreate => {}
 	
@@ -286,17 +292,14 @@ define insert_statement => type {
 		return .into(#ds->dsinfo->tablename)
 	}
 
+	public into(table::string,...) 	=> .switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
+	public into(table::string,...) 	=> .switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
+	public into(table::tag,...) 	=> .switch(::into,array(#table->asstring))->merge(::columns,#rest || staticarray) => givenblock
 
-	public into(table::string,...) 	=> .copy->switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
-	public into(table::string,...) 	=> .copy->switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
-
-	public into(table::tag,...) 	=> .copy->switch(::into,array(#table->asstring))->merge(::columns,#rest || staticarray) => givenblock
-
-	public columns(column::tag,...) 	=> .copy->merge(::columns,params) => givenblock
-	public columns(column::string,...) 	=> .copy->merge(::columns, params) => givenblock
+	public columns(column::tag,...) 	=> .merge(::columns,params) => givenblock
+	public columns(column::string,...) 	=> .merge(::columns, params) => givenblock
 	
-	public merge(target::tag,values::staticarray) => {
-	
+	public merge(target::tag,values::staticarray) => {	
 		match(#target) => {
 			case(::into)
 				.'into'->insertfrom(#values)
@@ -307,20 +310,32 @@ define insert_statement => type {
 			case(::update)
 				.'update'->insertfrom(#values)
 		}
-		return .invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
 
 	public into			=> .ifsize(.'into',			'INSERT INTO ',	',')
 	public columns		=> .ifsize(.'columns',		'(', ',', ')')
 	public values		=> .ifsize(.'values',		'VALUES ',',\n')
 	public onduplicate	=> .ifsize(.'onduplicate',	'ON DUPLICATE KEY UPDATE ',',\n')
+
+	public doevery(rows::integer) => {
+		.doevery = #rows
+		return .invokeifblock => givenblock
+	}
+
+
+//---------------------------------------------------------------------------------------
+//
+// 	Useful addrow sigs
+//
+//---------------------------------------------------------------------------------------
 	
 	public addrow(p::pair,...) => {
 		local(r) = map
 		with p in params do {
 			#p->isa(::pair) ? #r->insert(#p)
 		}
-		return .invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
 
 	public addrow(p1::any,p2::any,...) => {
@@ -332,34 +347,8 @@ define insert_statement => type {
 		
 		.addrow(#r)
 		
-		return .invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
-
-	public addrow(p::array) => {
-		fail_if(#p->size != .'columns'->size && .'columns'->size,'Row columns to not match specified columns: '+.'columns'->join(', '))
-		local(r) = array
-		
-		with v in #p do {
-			#r->insert(.encode(#v))
-		}
-		
-		.'values'->insert('('+#r->join(',')+')')
-		return .invoke(!givenblock) => givenblock
-	}
-
-	public row(p::map) => {
-		local(r) = array
-		
-		.'columns' = array
-		
-		with col in #p->keys do {
-			.'columns'->insert(#col)
-			#r->insert(#p->find(#col))
-		}
-		.addrow(#r)	
-		return .invoke(!givenblock) => givenblock
-	}	
-
 
 	public addrow(p::map) => {
 		local(r) = array
@@ -368,15 +357,56 @@ define insert_statement => type {
 			#r->insert(#p->find(#col))
 		}
 		.addrow(#r)	
-		return .invoke(!givenblock) => givenblock
-	}	
+		return .invokeifblock => givenblock
+	}
+	
+
+//---------------------------------------------------------------------------------------
+//
+//	Main addrow mechanism
+//
+//---------------------------------------------------------------------------------------
+	
+	public addrow(p::array) => {
+		fail_if(#p->size != .'columns'->size && .'columns'->size,'Row columns to not match specified columns: '+.'columns'->join(', '))
+		
+		local(r) = array
+		
+		with v in #p do {
+			#r->insert(.encode(#v))		
+		}
+		
+		.'values'->insert('('+#r->join(',')+')')
+		
+		if(.'ds' && .'doevery' && .'values'->size >= .'doevery' && !givenblock) => {
+			handle => {
+				.'values'->removeall 
+			}
+			.invoke => givenblock	
+		}
+	
+		return .invokeifblock => givenblock
+		
+	}
+
+//---------------------------------------------------------------------------------------
+//
+// 	Add multiple rows
+//
+//---------------------------------------------------------------------------------------
 	
 	public addrows(rows::trait_foreach) => {
 		#rows->foreach => {
 			.addrow(#1)
 		}
-		return .invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
+
+//---------------------------------------------------------------------------------------
+//
+// 	On duplicate key, MySQL only
+//
+//---------------------------------------------------------------------------------------
 
 	public onduplicate(keyupdateall::boolean) => {
 		local(on) = .'onduplicate'
@@ -388,23 +418,21 @@ define insert_statement => type {
 		else
 			.'onduplicate' = array
 		}
-		
-		return .copy->invoke(!givenblock) => givenblock
-
+		return .invokeifblock => givenblock
 	}
 
 	public onduplicate(p1,p2,...) => {
 		with p in params do {
 			.onduplicate(#p)
 		}
-		return .copy->invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
 
 	public onduplicate(p::pair) => {
 		.'onduplicate'->insert(
 			.encodecol(#p->name) + ' = ' + #p->value
 		)			
-		return .copy->invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
 
 	public onduplicate(p::tag) => .onduplicate(#p->asstring)
@@ -413,15 +441,21 @@ define insert_statement => type {
 		.'onduplicate'->insert(
 			.encodecol(#p)+' = VALUES('+.encodecol(#p)+')'			
 		)			
-		return .copy->invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
 
 	public onduplicate(keyupdate::array) => {
 		with p in #keyupdate do {
 			.onduplicate(#p)
 		}
-		return .copy->invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
+
+//---------------------------------------------------------------------------------------
+//
+// 	Stitch it all together
+//
+//---------------------------------------------------------------------------------------
 
 	public asstring => .into + .columns + .values + .onduplicate
 
@@ -450,12 +484,12 @@ define update_statement => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public update(table::tag,...) 		=> .copy->switch(::update,params->asarray) => givenblock
-	public update(table::string,...) 	=> .copy->switch(::update,params->asarray) => givenblock
-	public update(tables::array) 		=> .copy->switch(::update,#tables) => givenblock
-	public where(expr::array)			=> .copy->switch(::where,#expr) => givenblock
-	public join(tables::array) 			=> .copy->switch(::join,#tables) => givenblock
-	public join(tables::array) 			=> .copy->switch(::join,#tables) => givenblock
+	public update(table::tag,...) 		=> .switch(::update,params->asarray) => givenblock
+	public update(table::string,...) 	=> .switch(::update,params->asarray) => givenblock
+	public update(tables::array) 		=> .switch(::update,#tables) => givenblock
+	public where(expr::array)			=> .switch(::where,#expr) => givenblock
+	public join(tables::array) 			=> .switch(::join,#tables) => givenblock
+	public join(tables::array) 			=> .switch(::join,#tables) => givenblock
 
 //---------------------------------------------------------------------------------------
 //
@@ -463,25 +497,25 @@ define update_statement => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public set(expr::string,...)		=> .copy->merge(::set,params) => givenblock
+	public set(expr::string,...)		=> .merge(::set,params) => givenblock
 	public set(expr::pair,...)		=> {
 		with item in params do {
 			#item->isanyof(::pair,::keyword)
 			? .set(#item->name->asstring + ' = ' + .encode(#item->value))
 			| .set(#item)
 		}		
-		return .copy->invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
 	
-	public join(table::string,...) 		=> .copy->merge(::join,params) => givenblock
-	public where(expr::string,...)		=> .copy->merge(::where,params) => givenblock
+	public join(table::string,...) 		=> .merge(::join,params) => givenblock
+	public where(expr::string,...)		=> .merge(::where,params) => givenblock
 	public where(expr::pair,...)		=> {
 		with item in params do {
 			#item->isanyof(::pair,::keyword)
 			? .where(#item->name->asstring + ' = ' + .encode(#item->value))
 			| .where(#item)
 		}		
-		return .copy->invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
 
 //---------------------------------------------------------------------------------------
@@ -508,7 +542,7 @@ define update_statement => type {
 			case(::where)
 				.'where'->insertfrom(#values)
 		}
-		return .invoke(!givenblock) => givenblock
+		return .invokeifblock => givenblock
 	}
 
 //---------------------------------------------------------------------------------------
