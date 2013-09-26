@@ -34,7 +34,11 @@ define statement => type {
 //---------------------------------------------------------------------------------------
 
 	public invoke => {
-		return .ds->sql(.asstring) => givenblock
+		return .ds->sql(.statement) => givenblock
+	}
+
+	public invoke(ds::ds) => {
+		return #ds->sql(.statement) => givenblock
 	}
 
 	public invokeifblock => {
@@ -42,6 +46,14 @@ define statement => type {
 			return .invoke => givenblock
 		else
 			return self
+		}
+	}
+	
+	public asstring => {
+		if(.ds) => {
+			return .rows->join('')
+		else
+			return .statement
 		}
 	}
 
@@ -265,7 +277,7 @@ define select_statement => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public asstring => .select + .from + .join + .where + .groupby + .having + .orderby + .limit
+	public statement => .select + .from + .join + .where + .groupby + .having + .orderby + .limit
 
 }
 
@@ -457,7 +469,7 @@ define insert_statement => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public asstring => .into + .columns + .values + .onduplicate
+	public statement => .into + .columns + .values + .onduplicate
 
 }
 
@@ -551,7 +563,7 @@ define update_statement => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public asstring => .update + .join + .set + .where 
+	public statement => .update + .join + .set + .where 
 
 }
 
