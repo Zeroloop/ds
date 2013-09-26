@@ -15,7 +15,7 @@ define ds_connections => {
 	if(var(::__ds_connections__)->isnota(::sequential)) => {
 		$__ds_connections__ = sequential
 		web_request ? define_atend({
-			ds_connections->foreach => {
+			ds_connections->foreach => {				
 				//stdout(#1->key+': ')
 				#1->close
 				//stdoutnl('closed')	
@@ -33,12 +33,6 @@ define ds_connections => {
 
 define datasource(...) => ds(:#rest || staticarray)
 
-//---------------------------------------------------------------------------------------
-//
-// 	ds — datasource connection handler
-//
-//---------------------------------------------------------------------------------------
-
 define ds => type{
 
 	data
@@ -51,10 +45,19 @@ define ds => type{
 		public	actionparams = staticarray,
 
 		//	Connector
-		private capi
+		public capi
 
 	//	Thread safe copy
-	public ascopy 		=> ds(.dsinfo->makeinheritedcopy)
+	public ascopy 		=> {
+		local(ds) = ds
+		
+		#ds->dsinfo = .dsinfo->makeinheritedcopy
+		#ds->key = .key
+		#ds->capi = .capi
+		
+		return #ds
+	
+	}
 	public ascopydeep 	=> .ascopy
 
 //---------------------------------------------------------------------------------------
@@ -123,7 +126,6 @@ define ds => type{
 		-datasource = #datasource->asstring,
 		-database 	= #database,
 		-table 		= #table,
-
 		-host 		= #host,
 		-username 	= #username,
 		-password 	= #password,
@@ -181,20 +183,23 @@ define ds => type{
 		-password::string='',
 		-schema::string='',
 		-encoding::string='UTF-8',
-		
+				
 		// Perhaps this should be culled (legacy support for old version of ds)
 		-sql::string='', 
 		
 		// Legacy: support classic inline
 		-dsinfo::dsinfo=dsinfo,
-		-useinfo::boolean=false
+		-useinfo::boolean=false,
+		
+		// Allow key override
+		-key::string = #host + #database + #username + #port 
+		
 	) => {
 	
 		// Work round oncreate givenblock bug.
 		.'dsinfo' = #dsinfo
 		
 		local(
-			key 	= #host+#database+#username+#port,
 			active 	= ds_connections->find(#key),
 			dsinfo 	= .'dsinfo',
 			hostinfo,
@@ -210,23 +215,30 @@ define ds => type{
 		}
 		 
 		if(#active) => { 
+		
 			//	Check for existing connection
 			.'capi' 	= #active->capi
 			
 			//	Ensure thread safe
-			.'dsinfo'	= #active->dsinfo->makeinheritedcopy
+			//.'dsinfo' = #active->dsinfo//->makeinheritedcopy
 
-			//	Replace database and table (most likely the same)
-			.'dsinfo'->databasename = #database
-			.'dsinfo'->tablename 	= #table
+			local(d) = #active->dsinfo
+			
+			//.'dsinfo' = #active->dsinfo->makeinheritedcopy
+			#dsinfo->hostdatasource 	= #d->hostdatasource
+			#dsinfo->hostid 			= #d->hostid
+			#dsinfo->hostname 			= #d->hostname
+			#dsinfo->hostport 			= #d->hostport
+			#dsinfo->hostusername 		= #d->hostusername
+			#dsinfo->hostpassword 		= #d->hostpassword
+			#dsinfo->hosttableencoding 	= #d->hosttableencoding
+			#dsinfo->hostschema 		= #d->hostschema
 
 		else(#host)			
 	
 			//	Host specified, skip look up — fast
 	
 			#dsinfo->hostdatasource 	= #datasource
-			#dsinfo->databasename		= #database
-			#dsinfo->tablename			= #table
 			#dsinfo->hostid 			= 0
 			#dsinfo->hostname 			= #host
 			#dsinfo->hostport 			= #port->asstring
@@ -234,8 +246,7 @@ define ds => type{
 			#dsinfo->hostpassword 		= #password
 			#dsinfo->hosttableencoding 	= #encoding
 			#dsinfo->hostschema 		= #schema
-			#dsinfo->maxrows 			= #maxrows
-			
+	
 			.'capi' = \#datasource
 			
 		else(#database) 	
@@ -251,18 +262,20 @@ define ds => type{
 			//	Set properties from found info
 			#dsinfo->hostdatasource 	= #hostinfo->get(1)
 			#dsinfo->hostid 			= #hostinfo->get(2)	
-			#dsinfo->databasename		= #database
-			#dsinfo->tablename			= #table
 			#dsinfo->hostname 			= #hostinfo->get(3)
 			#dsinfo->hostport 			= #hostinfo->get(4)
 			#dsinfo->hostusername 		= #hostinfo->get(5)
 			#dsinfo->hostpassword		= #hostinfo->get(6)
 			#dsinfo->hostschema 		= #hostinfo->get(7)
 			#dsinfo->hosttableencoding 	= #hostinfo->get(8)||#encoding	
-			#dsinfo->maxrows 			= #maxrows
 
 			.'capi' = \#datasource
 		}
+
+		//	Replace database and table (most likely the same unless key)
+		#dsinfo->databasename		= #database
+		#dsinfo->tablename			= #table
+		#dsinfo->maxrows 			= #maxrows
 
 		//	Legacy: leverage clasic inlie constructor
 		if(#useinfo) => {
@@ -281,7 +294,6 @@ define ds => type{
 		if(#sql) => {
 			#dsinfo->action 	= lcapi_datasourceExecSQL
 			#dsinfo->statement 	= #sql
-			return .invoke => givenblock
 		}
 			
 		#gb ? return .invoke => #gb
@@ -379,6 +391,9 @@ define ds => type{
 	}
 
 	public close => {
+		.dsinfo->action = lcapi_datasourcetickle
+		.'capi'->invoke(.dsinfo)
+
 		.dsinfo->action = lcapi_datasourceCloseConnection
 		.'capi'->invoke(.dsinfo)
 	}
@@ -451,8 +466,8 @@ define ds => type{
 			#affected = integer(var(::__updated_count__))
 			
 			#set
-			? #result = ds_result(#set,#dsinfo,0,#error,#s->ascopy)
-			| #result = ds_result(indextable,array,staticarray,0,#affected,#error,#s->ascopy)
+			? #result = ds_result(self,#set,#dsinfo,0,#error,#s->ascopy)
+			| #result = ds_result(indextable,staticarray,staticarray,staticarray,0,#affected,#error,#s->ascopy)
 
 			//	Set result number
 			#result->num = #s->ascopy
@@ -463,8 +478,6 @@ define ds => type{
 			? currentcapture->restart  
 		}()
 
-//		results_push(#results)
-		
 		#gb ? .push(#results->asstaticarray)		
 		#gb ? handle => {
 			.pop
@@ -963,5 +976,6 @@ define dsinfo->extend(...) => {
 	return #dsinfo
 	
 }
+
 
 ?>

@@ -10,16 +10,17 @@
 define ds_row => type{
 
 	data
+		private ds::ds,						//	Reference to ds
 		private cols,						//	Reference to columns::staticarray
 		private row,						//	Reference to row::staticarray
 		private index::trait_searchable,	//	Reference for fast lookups::map
-		private dsinfo::dsinfo
+		private dsinfo::dsinfo 				//	Reference to dsinfo
 	
 	data public modified_data::trait_searchable = map	//	Used to store modified values
 
 	public database => .'dsinfo'->databasename
 	public table 	=> .'dsinfo'->tablename
-	public ds 		=> ds(.'dsinfo')
+	public ds 		=> .'ds'
 
 	public keycolumn => {
 		! .'dsinfo' ? return ''
@@ -73,6 +74,14 @@ define ds_row => type{
 		.'index'	= #index
 		.'cols' 	= #cols
 		.'row'	 	= #row
+		.'dsinfo' 	= #dsinfo
+	}
+
+	public oncreate(index::trait_searchable,cols::trait_foreach,row::staticarray,dsinfo::dsinfo,ds::ds)=>{
+		.'index'	= #index
+		.'cols' 	= #cols
+		.'row'	 	= #row
+		.'ds' 		= #ds
 		.'dsinfo' 	= #dsinfo
 	}
 

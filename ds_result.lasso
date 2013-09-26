@@ -39,6 +39,7 @@ define ds_result => type {
 		public num::integer=0,
 		
 		private error::staticarray=(:0,'',''),
+		private ds,	
 		private dsinfo,	
 		private dsrows
 
@@ -50,17 +51,32 @@ define ds_result => type {
 
 	public oncreate(
 		set::staticarray,
-		ds::dsinfo,
+		dsinfo::dsinfo,
 		affected::integer,
 		error::staticarray,
 		num::integer
 	) => {
-		.dsinfo = #ds
+		.dsinfo = #dsinfo
 		.affected = #affected
 		
 		.oncreate(#set,#error,#num)
 	}
 
+	public oncreate(
+		ds::ds,
+		set::staticarray,
+		dsinfo::dsinfo,
+		affected::integer,
+		error::staticarray,
+		num::integer
+	) => {
+		.ds = #ds
+		.dsinfo = #dsinfo
+		.affected = #affected
+		
+		.oncreate(#set,#error,#num)
+	
+	}
 	public oncreate(
 		set::staticarray,		
 		error::staticarray,
@@ -160,7 +176,7 @@ define ds_result => type {
 			#rows = array
 			.'rows'->foreach => {
 				#rows->insert(
-					ds_row(.'index',.'cols',#1,.'dsinfo')
+					ds_row(.'index',.'cols',#1,.'dsinfo',.'ds')
 				)
 			}
 		}
@@ -200,7 +216,7 @@ define ds_result => type {
 
 	public row(row::integer) => {
 		.'dsrows' ? return .'dsrows'->get(#row)
-		return dsrow(.'index',.'cols',.'rows'->get(#row))
+		return dsrow(.'index',.'cols',.'rows'->get(#row),.'dsinfo',.'ds')
 	}
 
 	public asstring => {
