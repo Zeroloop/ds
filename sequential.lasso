@@ -1,7 +1,7 @@
 <?lassoscript
 //-----------------------------------------------------------------------------------------
 //
-// 	Simple linked list (insert sorting can probably be removed)
+// 	Simple linked list
 //
 //-----------------------------------------------------------------------------------------
 
@@ -40,50 +40,32 @@ define sequential => type {
 			node = .'node',
 			key = #p->name,
 			new,
-			next,
 			prev
 		)	
 		
-		#node and not #next and not #prev ? {
+		#node ? {
 		
 			if(#node == #key) => {
 				//	Perfect
 				#node->value = #p->value
 				return
 				
-			else(#node < #key && #node->next > #key) 
-				//	Not to hot not too cold
+			else
 				#prev = #node
-				#next = #node->next
-				
-			else(#node < #key)
-				//	Move to next node
-				#node->next
-				?	#node = #node->next
-				|	#prev = #node
-
-			else(#node > #key)
-				//	Move to previous node
-				#node->prev
-				?	#node = #node->prev
-				|	#next = #node
 			}
 			
-			#node and not #next and not #prev 
-			? currentCapture->restart
 		}()
 
 		#new = sequential_node(#p)
-		#new->next = #next
 		#new->prev = #prev
 			
-		#next ? #next->prev = #new | .'last' = #new
 		#prev ? #prev->next = #new | .'first' = #new
 		
+		.'last' = #new
 		.'node' = #new
 		.'size'++
 	}
-	
+
 	public size => .'size'
 	public first => .'first'->value
 	public last => .'last'->value
@@ -170,17 +152,67 @@ define sequential => type {
 			#node ? currentCapture->restart
 		}()
 	}
-
 }
 
-define sequential_array => type {
-	parent array
-	public find(key::string) => ..find(#key)->first
+//-----------------------------------------------------------------------------------------
+//
+// 	Sorted linked list / sorted map like object
+//
+//-----------------------------------------------------------------------------------------
 
-	public foreach => {
-		local(gb) = givenblock
-		..foreach => {#gb(#1->value)}
-	}
+define sortedpairs => type {
+	parent sequential
+
+	public insert(p::pair) => {
+		local(
+			node = .'node',
+			key = #p->name,
+			new,
+			next,
+			prev
+		)	
+		
+		#node and not #next and not #prev ? {
+		
+			if(#node == #key) => {
+				//	Perfect
+				#node->value = #p->value
+				return
+				
+			else(#node < #key && #node->next > #key) 
+				//	Not to hot not too cold
+				#prev = #node
+				#next = #node->next
+				
+			else(#node < #key)
+				//	Move to next node
+				#node->next
+				?	#node = #node->next
+				|	#prev = #node
+
+			else(#node > #key)
+				//	Move to previous node
+				#node->prev
+				?	#node = #node->prev
+				|	#next = #node
+			}
+			
+			#node and not #next and not #prev 
+			? currentCapture->restart
+		}()
+
+		#new = sequential_node(#p)
+		#new->next = #next
+		#new->prev = #prev
+			
+		#next ? #next->prev = #new | .'last' = #new
+		#prev ? #prev->next = #new | .'first' = #new
+		
+		.'node' = #new
+		.'size'++
+	}	
+		
 }
+
 
 ?>
