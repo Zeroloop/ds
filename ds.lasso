@@ -146,6 +146,8 @@ define ds => type{
 		//	Legacy: store action params
 		.actionparams = #params 
 		
+		#useinfo ? handle => {.keycolumn = ''}
+				
 		return .oncreate(
 			-datasource = #dsinfo->hostdatasource || 'mysqlds',
 			-database 	= #dsinfo->databasename,
@@ -156,7 +158,7 @@ define ds => type{
 			-password 	= #dsinfo->hostpassword,
 			-port 		= integer(#dsinfo->hostport),	
 			-encoding	= #dsinfo->hosttableencoding || 'UTF-8',
-			-maxrows	= #dsinfo->maxrows,
+			-maxrows	= #dsinfo->maxrows || 50,
 			-dsinfo		= #dsinfo,	//	Legacy: leverage dsinfo constructor
 			-useinfo	= #useinfo	//	Legacy: switch to trigger legacy mode
 		) => givenblock 
@@ -234,6 +236,9 @@ define ds => type{
 			#dsinfo->hosttableencoding 	= #d->hosttableencoding
 			#dsinfo->hostschema 		= #d->hostschema
 
+			#dsinfo->databasename		= #d->databasename
+			#dsinfo->tablename			= #d->tablename
+
 		else(#host)			
 	
 			//	Host specified, skip look up — fast
@@ -279,6 +284,7 @@ define ds => type{
 
 		//	Legacy: leverage clasic inlie constructor
 		if(#useinfo) => {
+		
 			.'dsinfo'->action 			= #dsinfo->action
 			.'dsinfo'->statement 		= #dsinfo->statement
 			.'dsinfo'->statementonly 	= #dsinfo->statementonly
