@@ -177,6 +177,20 @@ define select_statement => type {
 	public having(expr::array)			=> .switch(::having,#expr) => givenblock
 	public orderby(columns::array) 		=> .switch(::orderby,#columns) => givenblock
 
+	public orderby(reset::boolean) => {
+		! #reset
+		? return .switch(::orderby,array) => givenblock 
+		| return .invokeifblock => givenblock
+	}
+
+	public limit(expr::array) 			=> .switch(::limit,#expr) => givenblock
+
+	public limit(reset::boolean) => {
+		! #reset
+		? return .switch(::limit,array) => givenblock 
+		| return .invokeifblock => givenblock
+	}
+
 	public from(table::tag,...) 		=> .switch(::from,params->asarray) => givenblock
 	public from(table::string,...) 		=> .switch(::from,params->asarray) => givenblock
 
@@ -206,9 +220,29 @@ define select_statement => type {
 		}
 		return #out->invokeifblock => givenblock
 	}
+	
 	public limit(expr::string) 					=> .switch(::limit,array(#expr)) => givenblock
 	public limit(max::integer) 					=> .switch(::limit,array('0,'+#max)) => givenblock
 	public limit(start::integer,max::integer) 	=> .switch(::limit,array('0,'+#max)) => givenblock
+
+//---------------------------------------------------------------------------------------
+//
+// 	Count results — best practice to establish found count in large result sets
+//
+//---------------------------------------------------------------------------------------
+
+	public count =>	{
+		local(s) = .ascount
+		if(.ds) => {
+			return #s->invoke->firstrow(::count)->asinteger
+		else	// Or fail?
+			return 0
+		}				
+	} 
+
+	public ascount => .ascopy->select('COUNT(*) as count')
+						->orderby(false)
+						->limit(false)
 
 //---------------------------------------------------------------------------------------
 //
@@ -567,7 +601,13 @@ define update_statement => type {
 
 }
 
+//---------------------------------------------------------------------------------------
+//
+//	Extend null (ninja style lasso extension)
+//
+//---------------------------------------------------------------------------------------
 
-
+define null->asinteger => integer(self)
+define null->asdecimal => decimal(self->asstring)
 
 ?>
