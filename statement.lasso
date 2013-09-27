@@ -328,7 +328,7 @@ define insert_statement => type {
 			update::array 	= array,
 			onduplicate		= array,
 		public
-			doevery			= 0		
+			insertevery			= 0		
 
 	public oncreate => {}
 	
@@ -339,11 +339,11 @@ define insert_statement => type {
 	}
 
 	public into(table::string,...) 	=> .switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
-	public into(table::string,...) 	=> .switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
 	public into(table::tag,...) 	=> .switch(::into,array(#table->asstring))->merge(::columns,#rest || staticarray) => givenblock
 
 	public columns(column::tag,...) 	=> .merge(::columns,params) => givenblock
 	public columns(column::string,...) 	=> .merge(::columns, params) => givenblock
+	public columns(columns::array) 		=> .switch(::columns,#columns) => givenblock
 	
 	public merge(target::tag,values::staticarray) => {	
 		match(#target) => {
@@ -364,8 +364,8 @@ define insert_statement => type {
 	public values		=> .ifsize(.'values',		'VALUES ',',\n')
 	public onduplicate	=> .ifsize(.'onduplicate',	'ON DUPLICATE KEY UPDATE ',',\n')
 
-	public doevery(rows::integer) => {
-		.doevery = #rows
+	public insertevery(rows::integer) => {
+		.insertevery = #rows
 		return .invokeifblock => givenblock
 	}
 
@@ -424,7 +424,7 @@ define insert_statement => type {
 		
 		.'values'->insert('('+#r->join(',')+')')
 		
-		if(.'ds' && .'doevery' && .'values'->size >= .'doevery' && !givenblock) => {
+		if(.'ds' && .'insertevery' && .'values'->size >= .'insertevery' && !givenblock) => {
 			handle => {
 				.'values'->removeall 
 			}
