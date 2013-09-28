@@ -11,4 +11,8 @@ or:
 	
 	svn export https://github.com/zeroloop/ds /var/lasso/home/LassoApps/ds
 
+or:
+
+	wget https://github.com/zeroloop/ds/archive/master.zip /var/lasso/home/LassoApps/ds.zip
+
 Full documentation online here: http://goo.gl/CYiKzX
