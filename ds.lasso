@@ -822,6 +822,14 @@ define ds => type{
 	public insert(...)	=> insert_statement(self) => givenblock
 	public update(...)	=> update_statement(self)->set(:#rest || staticarray) => givenblock
 
+	public insertinto(table::string,row::map,update::boolean=false)	=> insert_statement(self)->into(#table)
+																			->columns(#row->keys)
+																			->onduplicate(#update)
+																			->addrow(#row) => (givenblock || true)
+
+	public updaterowin(table::string,row::map,keyvalue::any) => .update(self)->set(#row->keys)
+																->where(.keycolumn = #keyvalue) => (givenblock || true)
+
 }
 
 //---------------------------------------------------------------------------------------
