@@ -343,7 +343,7 @@ define insert_statement => type {
 
 	public columns(column::tag,...) 	=> .merge(::columns,params) => givenblock
 	public columns(column::string,...) 	=> .merge(::columns, params) => givenblock
-	public columns(columns::array) 		=> .switch(::columns,#columns) => givenblock
+	public columns(columns::trait_foreach) 		=> .switch(::columns,#columns->asarray) => givenblock
 	
 	public merge(target::tag,values::staticarray) => {	
 		match(#target) => {
