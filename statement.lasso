@@ -13,7 +13,7 @@
 
 define statement => type {
 	data
-		ds,
+		public ds,
 		copyself = false 
 
 	public oncreate => {}
@@ -26,6 +26,12 @@ define statement => type {
 	public ds 		=> .'ds'
 	public copyself => .'copyself'
 	public copy 	=> self
+
+	public ascopy	=> {
+		local(c) = ..ascopy
+		#c->ds = .ds->ascopy		
+		return #c
+	}
 
 //---------------------------------------------------------------------------------------
 //
