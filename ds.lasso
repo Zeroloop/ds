@@ -12,13 +12,13 @@
 //---------------------------------------------------------------------------------------
 
 define ds_connections => {
-	if(var(::__ds_connections__)->isnota(::sequential)) => {
-		$__ds_connections__ = sequential
+	if(var(::__ds_connections__)->isnota(::map)) => {
+		$__ds_connections__ = map
 		web_request ? define_atend({
 			ds_connections->foreach => {				
-				//stdout(#1->key+': ')
+				stdout(#1->key+': ')
 				#1->close
-				//stdoutnl('closed')	
+				stdoutnl('closed')	
 			}
 		})
 	} 
@@ -48,7 +48,7 @@ define ds => type{
 		public capi
 
 	//	Thread safe copy
-	public ascopy 		=> {
+	public ascopy => {
 		local(ds) = ds
 		
 		#ds->dsinfo = .dsinfo->makeinheritedcopy
@@ -216,7 +216,11 @@ define ds => type{
 			.keycolumn = #keycolumn || .keycolumn	
 		}
 		 
+		debug('active' = #active)
+		 
 		if(#active) => { 
+		
+			debug()
 		
 			//	Check for existing connection
 			.'capi' 	= #active->capi
@@ -236,8 +240,9 @@ define ds => type{
 			#dsinfo->hosttableencoding 	= #d->hosttableencoding
 			#dsinfo->hostschema 		= #d->hostschema
 
-			#dsinfo->databasename		= #d->databasename
-			#dsinfo->tablename			= #d->tablename
+			#dsinfo->connection 		= #d->connection
+			#dsinfo->prepared 			= #d->prepared
+			#dsinfo->refobj 			= #d->refobj
 
 		else(#host)			
 	
