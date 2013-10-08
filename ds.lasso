@@ -16,9 +16,9 @@ define ds_connections => {
 		$__ds_connections__ = map
 		web_request ? define_atend({
 			ds_connections->foreach => {				
-				stdout(#1->key+': ')
+				//stdout(#1->key+': ')
 				#1->close
-				stdoutnl('closed')	
+				//stdoutnl('closed')	
 			}
 		})
 	} 
@@ -219,8 +219,6 @@ define ds => type{
 		debug('active' = #active)
 		 
 		if(#active) => { 
-		
-			debug()
 		
 			//	Check for existing connection
 			.'capi' 	= #active->capi
