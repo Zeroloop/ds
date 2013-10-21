@@ -216,8 +216,6 @@ define ds => type{
 			.keycolumn = #keycolumn || .keycolumn	
 		}
 		 
-		debug('active' = #active)
-		 
 		if(#active) => { 
 		
 			//	Check for existing connection
