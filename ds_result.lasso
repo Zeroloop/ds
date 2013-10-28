@@ -216,7 +216,7 @@ define ds_result => type {
 
 	public row(row::integer) => {
 		.'dsrows' ? return .'dsrows'->get(#row)
-		return dsrow(.'index',.'cols',.'rows'->get(#row),.'dsinfo',.'ds')
+		return ds_row(.'index',.'cols',.'rows'->get(#row),.'dsinfo',.'ds')
 	}
 
 	public asstring => {

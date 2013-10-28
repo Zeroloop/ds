@@ -64,7 +64,7 @@ define ds_row => type{
 		.'row'	= staticarray
 	}
 	
-	public oncreate(index::trait_searchable,cols::trait_foreach,row::staticarray)=>{
+	public oncreate(index::trait_searchable,cols::trait_foreach,row::staticarray,dsinfo::null=null,ds::null=null)=>{
 		.'index'= #index
 		.'cols' = #cols
 		.'row'	= #row
