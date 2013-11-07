@@ -262,7 +262,26 @@ define ds_result => type {
 	public lastrow(...) => .first(:#rest || staticarray)
 	public last(col::string) => .last->find(#col)
 	public last(col::string) => .last->find(#col)
-	
+
+
+
+//---------------------------------------------------------------------------------------
+//
+// 	Find rows within result set
+//
+//---------------------------------------------------------------------------------------
+
+	public find(p::pair) => (
+		with row in .rows 
+		where #row->find(#p->name) == #p->value
+		select #row
+	)->asstaticarray	
+
+	public find(p1::pair,p2::pair) => (
+		with row in .rows 
+		where #row->find(#p1->name) == #p1->value &&  #row->find(#p2->name) == #p2->value 
+		select #row
+	)->asstaticarray	
 	
 }
 ?>
