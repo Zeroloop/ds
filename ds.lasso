@@ -648,6 +648,7 @@ define ds => type{
 		match(#action) => {
 			case(::add)		.dsinfo->action = lcapi_datasourceadd
 			case(::update)	.dsinfo->action = lcapi_datasourceupdate
+			case(::search)	.dsinfo->action = lcapi_datasourcesearch
 			case(::delete)	.dsinfo->action = lcapi_datasourcedelete
 			case return self
 		}
@@ -745,22 +746,26 @@ define ds => type{
 	public getrows(keyvalue,...) 				=> .getfrom(.table,params)
 	public getrows(keyvalues::trait_foreach) 	=> .getfrom(.table,#keyvalues)
 
-	public getfrom(table::string,keyvalue::string) 			=> .search(#table,.keyvalues(.keycolumn=#keyvalue))->rows
-	public getfrom(table::string,keyvalue::integer) 		=> .search(#table,.keyvalues(.keycolumn=#keyvalue))->rows
-	public getfrom(table::string,key::pair) 				=> .search(#table,.keyvalues(#key))->rows
-	public getfrom(table::string,keyvalues::trait_foreach) 	=> {
-		
+	public getfrom(table::string,keyvalue::string) 		=> .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
+	public getfrom(table::string,keyvalue::integer) 	=> .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
+	public getfrom(table::string,key::pair) 			=> .execute(::search,#table,.keyvalues(#key),staticarray)->rows
+
+	public getfrom(table::string,keyvalues::trait_foreach) 	=> {		
 		local(
-			params = array(#table,-opbegin='or',-op='eq')
+			params = array(
+				-table = #table,
+				-opbegin = 'or',
+				-op = 'eq'
+			)
 		)
-		
+
 		with p in #keyvalues do {
 			#p->isa(::pair)			
 			? #params->insert(#p)
 			| #params->insert(.keycolumn = #p)
 		}
-		// This needs 
-		retun .search(:#params->asstaticarray)->rows
+
+		return .search(:#params->asstaticarray)->rows
 		
 	}
 
