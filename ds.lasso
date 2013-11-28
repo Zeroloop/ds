@@ -711,6 +711,12 @@ define ds => type{
 		#data->eachpair->asstaticarray
 	) => givenblock
 
+	public updaterow(table::tag,data::trait_keyedforeach,id::integer) => .execute(::update,
+		#table->asstring,
+		.keyvalues(.keycolumn=#id),
+		#data->eachpair->asstaticarray
+	) => givenblock
+
 	public updaterow(data::trait_keyedforeach,id::string) => .execute(::update,
 		.table,
 		.keyvalues(.keycolumn=#id),
