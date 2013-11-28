@@ -579,10 +579,13 @@ define ds => type{
 		local(input) = array
 
 		#p->foreach => {
-			#input->insert((:#1->first, 0, #1->second))
+			#input->insert((:#1->first, 0, .filterinput(#1->second)))
 		}
 		return #input->asstaticarray			
 	}	
+
+	private filterinput(p::any) => #p
+	private filterinput(p::date) => #p->asstring 
 
 //---------------------------------------------------------------------------------------
 //
