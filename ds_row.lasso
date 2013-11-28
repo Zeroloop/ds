@@ -122,6 +122,9 @@ define ds_row => type{
 	public find=(val,col::string) => {
 		.'modified_data'->insert(#col=#val)
 	}
+	public find=(val,col::tag) => {
+		.'modified_data'->insert(#col->asstring = #val)
+	}
 	public insert(pair::pair) => {
 		.'modified_data'->insert(#pair)
 	}
