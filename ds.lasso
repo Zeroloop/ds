@@ -748,6 +748,7 @@ define ds => type{
 
 	public deleterow(keyvalue::integer)	=> .execute(::delete,.table,.keyvalues(.keycolumn=#keyvalue),staticarray) => givenblock
 	public deleterow(keyvalue::string)	=> .execute(::delete,.table,.keyvalues(.keycolumn=#keyvalue),staticarray) => givenblock
+	public deleterow(keyvalue::pair)	=> .execute(::delete,.table,.keyvalues(#keyvalue),staticarray) => givenblock
 
 	public deleterow(fromtable::string,keyvalue::integer) => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue)) => givenblock
 	public deleterow(fromtable::string,keyvalue::string) => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue)) => givenblock
