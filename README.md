@@ -66,4 +66,4 @@ or:
 
 	wget https://github.com/zeroloop/ds/archive/master.zip /var/lasso/home/LassoApps/ds.zip
 
-Full documentation [begins here](/zeroloop/ds/wiki/introduction).
+Full documentation [begins here](https://github.com/zeroloop/ds/wiki/Working-with-data-sources-%E2%80%94-ds).
