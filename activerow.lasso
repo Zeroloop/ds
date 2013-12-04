@@ -36,27 +36,23 @@ define activerow => type {
 		return self
 	}
 	public oncreate(ds::ds) => {
-//!		debug('oncreate ds')
 		.'ds' = #ds
 		return self
 	}
 
 	public oncreate(keyvalue::string) => {
 		.row = .ds->getrow(#keyvalue)
-//!		debug('oncreate keyvalue::string' = .isnew)
 		return self
 	}
 
 	public oncreate(keyvalue::integer) => {
-		.row = .ds->getrow(.table,#keyvalue) 
-//!		debug('oncreate keyvalue::integer' = .isnew)
+		.row = .ds->getrow(#keyvalue) 
 		return self
 	}
 
 	public oncreate(key::pair,...) => {
-		.row = .ds->getrow(.table,#key)
-		.updatedata(params)
-//!		debug('oncreate keyvalue::integer' = .isnew)
+		.row = .ds->getrow(#key)
+		.updatedata(:params)
 		return self
 	}
 	
@@ -147,12 +143,13 @@ define activerow => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public updatedata(pair::pair,...) => .updatedata(
-		tie(staticarray(#pair),#rest || staticarray)->asstaticarray
-	)
 	public updatedata(data::trait_keyedForEach) => .updatedata(#data->eachPair->asstaticarray)
+	public updatedata(p::pair,...) => {	
+		.row->insert(#p)
+		#rest ? #rest->foreach => { .updatedata(#1) } 
+	}
 	public updatedata(data::staticarray) => {	
-		local(row) = .row		
+		local(row) = .row			
 		#data->foreach => {
 			#1->isa(::pair) ? #row->insert(#1) 
 		}
@@ -171,8 +168,12 @@ define activerow => type {
 	public set=(val,col::tag) 		=> .update(#col = #val)
 	public set=(val,col::string) 	=> .update(#col = #val)
 	
-	public update(pair::pair,...) => .update(params)
 	public update(data::trait_keyedforeach) => .update(#data->eachpair->asstaticarray)
+
+	public update(pair::pair,...) => {
+		.updatedata(:params)
+		.update
+	}
 	public update(values::staticarray) => {
 		.updatedata(#values)
 		.update 
@@ -242,7 +243,7 @@ define activerow => type {
 //---------------------------------------------------------------------------------------
 
 	public save(pair::pair,...) => {
-		.updatedata(params)
+		.updatedata(:params)
 		return .save
 	}
 

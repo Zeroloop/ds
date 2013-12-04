@@ -30,7 +30,6 @@ define ds_row => type{
 		| return 'id'
 	}
 	
-	// always return untouched value
 	public keyvalue => .raw(.keycolumn) 
 	
 	public keyvalue=(p::any)  	=> {
@@ -135,8 +134,12 @@ define ds_row => type{
 //
 //---------------------------------------------------------------------------------------
 
-	public updatedata(pair::pair,...) => .updatedata(tie(staticarray(#pair),#rest || staticarray)->asstaticarray)
 	public updatedata(data::trait_keyedForEach) => .updatedata(#data->eachPair->asstaticarray)
+
+	public updatedata(p::pair,...) => {	
+		.insert(#p)
+		#rest ? #rest->foreach => { .updatedata(#1) } 
+	}
 	public updatedata(values::staticarray) => {
 		#values->foreach => {
 			#1->isa(::pair) ? .insert(#1) 
@@ -156,8 +159,12 @@ define ds_row => type{
 	public set=(val,col::tag) 		=> .update(#col = #val)
 	public set=(val,col::string) 	=> .update(#col = #val)
 	
-	public update(pair::pair,...) => .update(tie(staticarray(#pair),#rest || staticarray)->asstaticarray)
 	public update(data::trait_keyedForEach) => .update(#data->eachPair->asstaticarray)
+
+	public update(p::pair,...) => {	
+		.updatedata(:params)
+		.update
+	}
 	public update(values::staticarray) => {
 		.updatedata(#values)
 		.update
