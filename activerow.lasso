@@ -6,7 +6,7 @@
 //..All rights reserved — K Carlton 2013.................................................
 
 define activerow_pluralise_tables => true
-define activerow_default_timestamp_format => 'YYYY-mm-dd HH-MM-SS'
+define activerow_default_timestamp_format => 'YYYY-MM-dd HH:mm:ss'
 define activerow_default_created_column => ''
 define activerow_default_modified_column => ''
 	
@@ -42,11 +42,13 @@ define activerow => type {
 
 	public oncreate(keyvalue::string) => {
 		.row = .ds->getrow(#keyvalue)
+		.updatedata(.keycolumn = #keyvalue)
 		return self
 	}
 
 	public oncreate(keyvalue::integer) => {
 		.row = .ds->getrow(#keyvalue) 
+		.updatedata(.keycolumn = #keyvalue)
 		return self
 	}
 
@@ -231,7 +233,7 @@ define activerow => type {
 		'mysqlds,sqliteds' >> .ds->datasource && not .find(.keycolumn) 
 		? #row->insert(
 			#row->keycolumn = null
-		)
+		)		
 		#row = .ds->addrow(.table,#row->modified_data)
 		#row ? .'row' := #row | fail('Unable to create row')
 	}
@@ -277,6 +279,5 @@ define activerow => type {
 
 
 }
-
 
 ?>

@@ -215,7 +215,7 @@ define ds => type{
 			//	Set keycolumn info
 			.keycolumn = #keycolumn || .keycolumn	
 		}
-		 
+		
 		if(#active) => { 
 		
 			//	Check for existing connection
@@ -643,7 +643,7 @@ define ds => type{
 		values::staticarray,
 		firstrow::boolean=false
 	) => {
-
+		
 		//	New dsinfo
 		.dsinfo = .dsinfo->makeinheritedcopy
 
@@ -782,7 +782,7 @@ define ds => type{
 		)
 
 		with p in #keyvalues do {
-			#p->isa(::pair)			
+			#p->isanyof(::pair,::keyword)			
 			? #params->insert(#p)
 			| #params->insert(.keycolumn = #p)
 		}
