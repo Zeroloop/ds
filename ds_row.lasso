@@ -197,7 +197,7 @@ define ds_row => type{
 			map 		= map,
 			modified 	= .modified_data,
 			cols 		= .'cols',
-			row 		= .'row',
+			row 		= .'row'
 		)
 
 		//	Build map
