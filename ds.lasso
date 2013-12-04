@@ -853,10 +853,10 @@ define ds => type{
 	public insertinto(table::string,row::map,update::boolean=false)	=> insert_statement(self)->into(#table)
 																			->columns(#row->keys)
 																			->onduplicate(#update)
-																			->addrow(#row) => (givenblock || true)
+																			->addrow(#row) => (givenblock || {})
 
 	public updaterowin(table::string,row::map,keyvalue::any) => .update(self)->set(#row->keys)
-																->where(.keycolumn = #keyvalue) => (givenblock || true)
+																->where(.keycolumn = #keyvalue) => (givenblock || {})
 
 }
 
