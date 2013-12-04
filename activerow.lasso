@@ -6,7 +6,7 @@
 //..All rights reserved — K Carlton 2013.................................................
 
 define activerow_pluralise_tables => true
-define activerow_default_timestamp_format => 'YYYY-MM-dd HH:mm:ss'
+define activerow_default_timestamp_format => 'yyyy-MM-dd HH:mm:ss'
 define activerow_default_created_column => ''
 define activerow_default_modified_column => ''
 	
