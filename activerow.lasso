@@ -268,8 +268,8 @@ define activerow => type {
 
 	public invoke(col::tag) 		=> .'row'->find(#col->asstring)
 	public invoke(col::string) 		=> .'row'->find(#col)
-	public invoke=(val,col::tag) 	=> { .'row'->find(#col->asstring) = #val }
-	public invoke=(val,col::string) => { .'row'->find(#col) = #val }
+//	public invoke=(val,col::tag) 	=> { .'row'->find(#col->asstring) = #val }
+//	public invoke=(val,col::string) => { .'row'->find(#col) = #val }
 	
 	
 	public find(col::tag) 			=> .'row'->find(#col->asstring)
