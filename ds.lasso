@@ -393,6 +393,12 @@ define ds => type{
 		return .invoke => givenblock
 	}
 
+	public sql=(statement::string) => {
+		local(dsinfo) =.'dsinfo'
+		#dsinfo->action 	= lcapi_datasourceExecSQL
+		#dsinfo->statement 	= #statement
+	}
+	
 	private store => {
 		ds_connections->insert(.'key' = self)
 	}
