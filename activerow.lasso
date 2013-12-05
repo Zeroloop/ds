@@ -163,9 +163,6 @@ define activerow => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public invoke=(val,col::tag) 	=> .update(#col = #val)
-	public invoke=(val,col::string) => .update(#col = #val)
-
 	public set(pair::pair) 			=> .update(#pair)
 	public set=(val,col::tag) 		=> .update(#col = #val)
 	public set=(val,col::string) 	=> .update(#col = #val)
@@ -268,14 +265,23 @@ define activerow => type {
 
 	public invoke(col::tag) 		=> .'row'->find(#col->asstring)
 	public invoke(col::string) 		=> .'row'->find(#col)
-//	public invoke=(val,col::tag) 	=> { .'row'->find(#col->asstring) = #val }
-//	public invoke=(val,col::string) => { .'row'->find(#col) = #val }
+	public invoke=(val,col::tag) 	=> { .'row'->find(#col->asstring) = #val }
+	public invoke=(val,col::string) => { .'row'->find(#col) = #val }
 	
 	
 	public find(col::tag) 			=> .'row'->find(#col->asstring)
 	public find(col::string) 		=> .'row'->find(#col)
 	public find=(val,col::tag) 		=> { .'row'->find(#col->asstring) = #val }
 	public find=(val,col::string) 	=> { .'row'->find(#col) = #val }
+
+//---------------------------------------------------------------------------------------
+//
+// 	Retun self as map or array (includes modified data)
+//
+//---------------------------------------------------------------------------------------
+	
+	public asmap => .'row'->asmap
+	public asarray => .'row'->asarray
 
 
 }

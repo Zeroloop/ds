@@ -134,6 +134,9 @@ define ds_row => type{
 //
 //---------------------------------------------------------------------------------------
 
+	public invoke=(val,col::tag) 	=> .insert(#col = #val)
+	public invoke=(val,col::string) => .insert(#col = #val)
+
 	public updatedata(data::trait_keyedForEach) => .updatedata(#data->eachPair->asstaticarray)
 
 	public updatedata(p::pair,...) => {	
@@ -151,9 +154,6 @@ define ds_row => type{
 // 	Update internal data and row
 //
 //---------------------------------------------------------------------------------------
-
-	public invoke=(val,col::tag) 	=> .update(#col = #val)
-	public invoke=(val,col::string) => .update(#col = #val)
 
 	public set(pair::pair) 			=> .update(#pair)
 	public set=(val,col::tag) 		=> .update(#col = #val)
