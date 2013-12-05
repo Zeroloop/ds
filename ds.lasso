@@ -961,6 +961,9 @@ define dsinfo->extend(...) => {
 					#dsinfo->action = lcapi_datasourceinfo
 				case('statementonly')
 					#dsinfo->statementonly = true
+				case('sql')
+					#dsinfo->statement 	= #val
+					#dsinfo->action 	= lcapi_datasourceExecSQL
 				case('prepare')
 					#dsinfo->statement 	= #val
 					#dsinfo->action 	= lcapi_datasourcepreparesql
