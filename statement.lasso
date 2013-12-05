@@ -387,24 +387,21 @@ define insert_statement => type {
 		with p in params do {
 			#p->isa(::pair) ? #r->insert(#p)
 		}
+		.addrow(#r)
 		return .invokeifblock => givenblock
 	}
 
 	public addrow(p1::any,p2::any,...) => {
 		local(r) = array
-		
 		with p in params do {
 			#r->insert(#p)
 		}
-		
 		.addrow(#r)
-		
 		return .invokeifblock => givenblock
 	}
 
 	public addrow(p::map) => {
 		local(r) = array
-		
 		with col in .'columns' do {
 			#r->insert(#p->find(#col))
 		}
