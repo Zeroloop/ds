@@ -922,7 +922,7 @@ define dsinfo->extend(...) => {
 				case('host')
 					#val->isa(::array)
 					? #val->foreach => {
-						#1->isa(::pair) && #val := #1->value
+						#1->isanyof(::keyword,::pair) && #val := #1->value
 						? match(#p->name) => {
 							case('datasource')
 								#dsinfo->hostdatasource 	= #val
