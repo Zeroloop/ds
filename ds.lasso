@@ -583,8 +583,17 @@ define ds => type{
 		return self
 	}
 	
+
 	private keyvalues => .keyvalues(.keycolumn = null)
-	private keyvalues(p::pair) => (:(:#p->name, lcapi_datasourceopeq,#p->value))
+
+	private keyvalues(p::pair) 		=> (:.keyvalue(#p))
+	private keyvalues(p::integer) 	=> .keyvalues(.keycolumn = #p)
+	private keyvalues(p::string) 	=> .keyvalues(.keycolumn = #p)
+	private keyvalues(keys::trait_foreach) => {
+		return (with p in #keys select .keyvalue(#p))->asstaticarray
+	}
+	
+	private keyvalue(p::pair) => (:#p->name, lcapi_datasourceopeq,#p->value)
 
 	private inputcolumns(p::trait_foreach) => {
 		local(input) = array
@@ -719,35 +728,26 @@ define ds => type{
 		#row->modified_data->eachpair->asstaticarray
 	) => givenblock
 
-	public updaterow(table::string,data::trait_keyedforeach,id::integer) => .execute(::update,
+	public updaterow(table::tag,data::trait_keyedforeach,key::any) => .updaterow(#table->asstring,#data,#key)
+
+	public updaterow(table::string,data::trait_keyedforeach,key::any) => .execute(::update,
 		#table,
-		.keyvalues(.keycolumn=#id),
+		.keyvalues(#key),
 		#data->eachpair->asstaticarray
 	) => givenblock
 
-	public updaterow(table::tag,data::trait_keyedforeach,id::integer) => .execute(::update,
-		#table->asstring,
-		.keyvalues(.keycolumn=#id),
+	public updaterow(data::trait_keyedforeach,key::pair,...) => .execute(::update,
+		.table,
+		.keyvalues(tie((:#key), #rest || staticarray)->asstaticarray),
 		#data->eachpair->asstaticarray
 	) => givenblock
 
-	public updaterow(data::trait_keyedforeach,id::string) => .execute(::update,
-		.table,
-		.keyvalues(.keycolumn=#id),
-		#data->eachpair->asstaticarray
-	) => givenblock
-	
-	public updaterow(data::trait_keyedforeach,id::integer) => .execute(::update,
-		.table,
-		.keyvalues(.keycolumn=#id),
-		#data->eachpair->asstaticarray
-	) => givenblock
-	
-	public updaterow(data::trait_keyedforeach,key::pair) => .execute(::update,
+	public updaterow(data::trait_keyedforeach,key::any) => .execute(::update,
 		.table,
 		.keyvalues(#key),
 		#data->eachpair->asstaticarray
 	) => givenblock
+
 
 //---------------------------------------------------------------------------------------
 //
