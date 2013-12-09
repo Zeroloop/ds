@@ -576,25 +576,69 @@ define ds => type{
 
 		return #col
 	}
-
 	public keycolumn(col::tag) => .keycolumn(#col->asstring)
 	public keycolumn(col::string) => {
 		.keycolumn = #col
 		return self
 	}
+
+//---------------------------------------------------------------------------------------
+//
+// 	Multiple key column support
+//
+//---------------------------------------------------------------------------------------	
 	
+	public keycolumns => {
+		.'dsinfo'->keycolumns->size
+		?	return (with key in .'dsinfo'->keycolumns select #key->get(1))->asstaticarray
+		|	return (:.'keycolumn')
+	}
+		
+	public keycolumns=(keycolumns::trait_foreach) => {
+		.'dsinfo'->keycolumns = (
+			with col in #keycolumns
+			select .keyvalue(#col = null)
+		)->asstaticarray
+		
+		return #keycolumns->asstaticarray
+	}
 
-	private keyvalues => .keyvalues(.keycolumn = null)
+	public keycolumns(key::string,...) => .keycolumns((with p in params select #p)->asstaticarray)
+	public keycolumns(key::tag,...) => .keycolumns((with p in params select #p->asstring)->asstaticarray)
+	
+	public keycolumns(keycolumns::trait_foreach) => {
+		.keycolumns = #keycolumns
+		return self
+	}
+	
+//---------------------------------------------------------------------------------------
+//
+// 	key value wrappers
+//
+//---------------------------------------------------------------------------------------	
 
-	private keyvalues(p::pair) 		=> (:.keyvalue(#p))
+	private keyvalues => .keyvalues(.keycolumns)
+	
+	private keyvalues(p::pair,...) 	=> .keyvalues(params)	
 	private keyvalues(p::integer) 	=> .keyvalues(.keycolumn = #p)
 	private keyvalues(p::string) 	=> .keyvalues(.keycolumn = #p)
+
+	private keyvalues(keys::trait_keyedforeach) => {
+		return (with p in #keys->eachpair select .keyvalue(#p))->asstaticarray
+	}
+
 	private keyvalues(keys::trait_foreach) => {
 		return (with p in #keys select .keyvalue(#p))->asstaticarray
 	}
 	
 	private keyvalue(p::pair) => (:#p->name, lcapi_datasourceopeq,#p->value)
 
+//---------------------------------------------------------------------------------------
+//
+// 	input column wrapper 
+//
+//---------------------------------------------------------------------------------------	
+	
 	private inputcolumns(p::trait_foreach) => {
 		local(input) = array
 
@@ -1032,6 +1076,5 @@ define dsinfo->extend(...) => {
 	return #dsinfo
 	
 }
-
 
 ?>
