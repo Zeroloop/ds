@@ -428,7 +428,7 @@ define ds => type{
 //
 //-----------------------------------------------------------	
 
-	public invoke => {
+	public invoke(dsinfo::dsinfo = .'dsinfo') => {
 	
 		//	Close connection when not web_request not ideal, but safe.
 		not web_request ? handle => {.close}
@@ -439,10 +439,8 @@ define ds => type{
 		local(
 			gb 		= givenblock,
 			capi 	= .'capi',
-			dsinfo 	= .'dsinfo',
 			results	= array,
-			s = 1,
-		
+			s = 1,		
 			set,
 			result,
 			error,
@@ -475,10 +473,7 @@ define ds => type{
 		}
 		
 		#error->get(1) ? fail(#error->get(1),#error->get(2))
-		
-		//! Set keycolumns now? Need by row for updates.
-		.keycolumn = .keycolumn
-				
+
 		{
 			#set = #dsinfo->getset(#s)
 			#affected = integer(var(::__updated_count__))
@@ -631,6 +626,8 @@ define ds => type{
 		return (with p in #keys select .keyvalue(#p))->asstaticarray
 	}
 	
+	private keyvalue(p::string) => (:#p, lcapi_datasourceopeq,null)
+	private keyvalue(p::tag) => (:#p->asstring, lcapi_datasourceopeq,null)
 	private keyvalue(p::pair) => (:#p->name, lcapi_datasourceopeq,#p->value)
 
 //---------------------------------------------------------------------------------------
@@ -707,28 +704,28 @@ define ds => type{
 		values::staticarray,
 		firstrow::boolean=false
 	) => {
-		
+
 		//	New dsinfo
-		.dsinfo = .dsinfo->makeinheritedcopy
+		local(dsinfo) = .dsinfo->makeinheritedcopy
 
 		//	Determine action
 		match(#action) => {
-			case(::add)		.dsinfo->action = lcapi_datasourceadd
-			case(::update)	.dsinfo->action = lcapi_datasourceupdate
-			case(::search)	.dsinfo->action = lcapi_datasourcesearch
-			case(::delete)	.dsinfo->action = lcapi_datasourcedelete
+			case(::add)		#dsinfo->action = lcapi_datasourceadd
+			case(::update)	#dsinfo->action = lcapi_datasourceupdate
+			case(::search)	#dsinfo->action = lcapi_datasourcesearch
+			case(::delete)	#dsinfo->action = lcapi_datasourcedelete
 			case return self
 		}
 		
 		//	Set values
-		.dsinfo->tablename 		= #table
-		.dsinfo->keycolumns 	= (#keyvalues->size ? #keyvalues | .keyvalues)
-		.dsinfo->inputcolumns 	= .inputcolumns(#values)
+		#dsinfo->tablename 		= #table
+		#dsinfo->keycolumns 	= (#keyvalues->size ? #keyvalues | .keyvalues)
+		#dsinfo->inputcolumns 	= .inputcolumns(#values)
 		
 		//!debug('update keys' = .dsinfo->keycolumns)
 		//!debug('update input' = .dsinfo->inputcolumns)
-		
-		local(out) = .invoke => givenblock 
+
+		local(out) = .invoke(#dsinfo) => givenblock 
 				
 		return #firstrow ? .firstrow | #out
 	}
