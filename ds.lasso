@@ -38,6 +38,7 @@ define ds => type{
 	data
 		public	dsinfo::dsinfo,
 		public	key::string = '',
+		public	silent::boolean = false,
 		private	keycolumn::string = 'id',	
 		private results = staticarray,
 
@@ -472,8 +473,13 @@ define ds => type{
 			#result ? return #result
 		}
 		
-		#error->get(1) ? fail(#error->get(1),#error->get(2))
-
+		if(.silent) => {
+			error_code = #error->get(1)
+			error_msg = #error->get(2)
+		else
+			#error->get(1) ? fail(#error->get(1),#error->get(2))			
+		}
+		
 		{
 			#set = #dsinfo->getset(#s)
 			#affected = integer(var(::__updated_count__))
@@ -678,6 +684,11 @@ define ds => type{
 	public table(name::tag) => .table(#name->asstring)
 	public table(name::string) => {
 		.dsinfo->tablename = #name->asstring
+		return self
+	}
+
+	public silent(shouldprotect::boolean) => {
+		.silent = #shouldprotect
 		return self
 	}
 
