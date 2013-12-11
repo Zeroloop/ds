@@ -343,6 +343,8 @@ define insert_statement => type {
 		.'copyself' = true
 		return .into(#ds->dsinfo->tablename)
 	}
+	
+
 
 	public into(table::string,...) 	=> .switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
 	public into(table::tag,...) 	=> .switch(::into,array(#table->asstring))->merge(::columns,#rest || staticarray) => givenblock
@@ -374,7 +376,8 @@ define insert_statement => type {
 		.insertevery = #rows
 		return .invokeifblock => givenblock
 	}
-
+	
+	public do => .'values'->size || givenblock ? .invoke => givenblock
 
 //---------------------------------------------------------------------------------------
 //
