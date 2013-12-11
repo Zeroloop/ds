@@ -719,6 +719,11 @@ define ds => type{
 		//	New dsinfo
 		local(dsinfo) = .dsinfo->makeinheritedcopy
 
+		//	Retain connection
+		#dsinfo->connection 		= .dsinfo->connection
+		#dsinfo->prepared 			= .dsinfo->prepared
+		#dsinfo->refobj 			= .dsinfo->refobj
+
 		//	Determine action
 		match(#action) => {
 			case(::add)		#dsinfo->action = lcapi_datasourceadd
@@ -739,7 +744,7 @@ define ds => type{
 		local(out) = .invoke(#dsinfo) => givenblock 
 				
 		return #firstrow ? .firstrow | #out
-	}
+	} 
 
 //---------------------------------------------------------------------------------------
 //
