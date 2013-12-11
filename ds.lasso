@@ -717,13 +717,28 @@ define ds => type{
 	) => {
 
 		//	New dsinfo
-		local(dsinfo) = .dsinfo->makeinheritedcopy
+		local(
+			d = .'dsinfo',
+			dsinfo = dsinfo
+		)
 
-		//	Retain connection
-		#dsinfo->connection 		= .dsinfo->connection
-		#dsinfo->prepared 			= .dsinfo->prepared
-		#dsinfo->refobj 			= .dsinfo->refobj
+		#dsinfo->databasename		= #d->databasename
+		#dsinfo->tablename			= #d->tablename
+		#dsinfo->maxrows 			= #d->maxrows
 
+		#dsinfo->hostdatasource 	= #d->hostdatasource
+		#dsinfo->hostid 			= #d->hostid
+		#dsinfo->hostname 			= #d->hostname
+		#dsinfo->hostport 			= #d->hostport
+		#dsinfo->hostusername 		= #d->hostusername
+		#dsinfo->hostpassword 		= #d->hostpassword
+		#dsinfo->hosttableencoding 	= #d->hosttableencoding
+		#dsinfo->hostschema 		= #d->hostschema
+
+		#dsinfo->connection 		= #d->connection
+		#dsinfo->prepared 			= #d->prepared
+		#dsinfo->refobj 			= #d->refobj
+		
 		//	Determine action
 		match(#action) => {
 			case(::add)		#dsinfo->action = lcapi_datasourceadd
@@ -737,11 +752,14 @@ define ds => type{
 		#dsinfo->tablename 		= #table
 		#dsinfo->keycolumns 	= (#keyvalues->size ? #keyvalues | .keyvalues)
 		#dsinfo->inputcolumns 	= .inputcolumns(#values)
-		
-		//!debug('update keys' = .dsinfo->keycolumns)
-		//!debug('update input' = .dsinfo->inputcolumns)
 
 		local(out) = .invoke(#dsinfo) => givenblock 
+		
+		if(!#d->connection) => {
+			#d->connection 	= #dsinfo->connection
+			#d->prepared 	= #dsinfo->prepared
+			#d->refobj 		= #dsinfo->refobj			
+		}
 				
 		return #firstrow ? .firstrow | #out
 	} 
