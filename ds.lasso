@@ -33,12 +33,27 @@ define ds_connections => {
 
 define datasource(...) => ds(:#rest || staticarray)
 
+//---------------------------------------------------------------------------------------
+//
+// 	ds — defaults
+//
+//---------------------------------------------------------------------------------------
+
+define ds_default_silent => true
+define ds_default_maxrows => 50
+
+//---------------------------------------------------------------------------------------
+//
+// 	ds — main type
+//
+//---------------------------------------------------------------------------------------
+
 define ds => type{
 
 	data
 		public	dsinfo::dsinfo,
 		public	key::string = '',
-		public	silent::boolean = false,
+		public	silent::boolean = ds_default_silent,
 		private	keycolumn::string = 'id',	
 		private results = staticarray,
 
@@ -159,7 +174,7 @@ define ds => type{
 			-password 	= #dsinfo->hostpassword,
 			-port 		= integer(#dsinfo->hostport),	
 			-encoding	= #dsinfo->hosttableencoding || 'UTF-8',
-			-maxrows	= #dsinfo->maxrows || 50,
+			-maxrows	= #dsinfo->maxrows || ds_default_maxrows,
 			-dsinfo		= #dsinfo,	//	Legacy: leverage dsinfo constructor
 			-useinfo	= #useinfo	//	Legacy: switch to trigger legacy mode
 		) => givenblock 
@@ -177,7 +192,7 @@ define ds => type{
 		-database::string='',
 		-table::string='',
 		-keycolumn::string='',
-		-maxrows::integer=50,
+		-maxrows::integer=ds_default_maxrows,
 		
 		// Host params
 		-host::string='',
@@ -379,7 +394,7 @@ define ds => type{
 //-----------------------------------------------------------
 	
 	public sql(
-		statement::string,maxrows::integer = .dsinfo->maxrows || 50
+		statement::string,maxrows::integer = .dsinfo->maxrows || ds_default_maxrows
 	) => {
 		
 		//	Clear old results
