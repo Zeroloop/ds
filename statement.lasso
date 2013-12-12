@@ -33,6 +33,8 @@ define statement => type {
 		return #c
 	}
 
+	public asstring => .statement
+
 //---------------------------------------------------------------------------------------
 //
 // 	These methods invoke the datasource
@@ -55,14 +57,6 @@ define statement => type {
 		}
 	}
 	
-	public asstring => {
-		if(.ds) => {
-			return .rows->join('')
-		else
-			return .statement
-		}
-	}
-
 	/*	Invoke DS */
 	public rows 				=> .invoke->rows => givenblock
 	public rows(type::tag) 		=> .invoke->rows(#type) => givenblock
@@ -165,6 +159,15 @@ define select_statement => type {
 		.'copyself' = true
 		return .from(#ds->dsinfo->tablename)
 	}
+
+	public asstring => {
+		if(.ds) => {
+			return .rows->join('')
+		else
+			return .statement
+		}
+	}
+
 	
 //---------------------------------------------------------------------------------------
 //
@@ -344,8 +347,6 @@ define insert_statement => type {
 		return .into(#ds->dsinfo->tablename)
 	}
 	
-
-
 	public into(table::string,...) 	=> .switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
 	public into(table::tag,...) 	=> .switch(::into,array(#table->asstring))->merge(::columns,#rest || staticarray) => givenblock
 
