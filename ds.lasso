@@ -39,7 +39,7 @@ define datasource(...) => ds(:#rest || staticarray)
 //
 //---------------------------------------------------------------------------------------
 
-define ds_default_silent => true
+define ds_default_silent => false
 define ds_default_maxrows => 50
 
 //---------------------------------------------------------------------------------------
@@ -716,7 +716,6 @@ define ds => type{
 	public affected => .'results'->size ? .'results'->last->affected | 0
 	public found	=> .'results'->size ? .'results'->last->found | 0
 	
-	
 //---------------------------------------------------------------------------------------
 //
 // 	Execute
@@ -768,14 +767,18 @@ define ds => type{
 		#dsinfo->keycolumns 	= (#keyvalues->size ? #keyvalues | .keyvalues)
 		#dsinfo->inputcolumns 	= .inputcolumns(#values)
 
-		local(out) = .invoke(#dsinfo) => givenblock 
-		
-		if(!#d->connection) => {
-			#d->connection 	= #dsinfo->connection
-			#d->prepared 	= #dsinfo->prepared
-			#d->refobj 		= #dsinfo->refobj			
+		handle => {
+			if(!#d->connection) => {
+				#d->connection 	= #dsinfo->connection
+				#d->prepared 	= #dsinfo->prepared
+				#d->refobj 		= #dsinfo->refobj			
+			}	
 		}
-				
+
+		local(out) = .invoke(#dsinfo) => givenblock 
+
+	
+			
 		return #firstrow ? .firstrow | #out
 	} 
 
