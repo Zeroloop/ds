@@ -76,7 +76,7 @@ define ds => type{
 	}
 	public ascopydeep 	=> .ascopy
 
-	public silent => (.'silent'->isnot(::void) ? .'silent' | ds_default_silent)
+	public silent => (.'silent'->isnota(::void) ? .'silent' | ds_default_silent)
 
 //---------------------------------------------------------------------------------------
 //
