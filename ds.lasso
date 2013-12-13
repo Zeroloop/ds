@@ -53,7 +53,7 @@ define ds => type{
 	data
 		public	dsinfo::dsinfo,
 		public	key::string = '',
-		public	silent::boolean = ds_default_silent,
+		public	silent::boolean,
 		private	keycolumn::string = 'id',	
 		private results = staticarray,
 
@@ -75,6 +75,8 @@ define ds => type{
 	
 	}
 	public ascopydeep 	=> .ascopy
+
+	public silent => (.'silent'->isnot(::void) ? .'silent' | ds_default_silent)
 
 //---------------------------------------------------------------------------------------
 //
