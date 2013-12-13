@@ -974,7 +974,7 @@ define ds => type{
 //---------------------------------------------------------------------------------------
 
 define dsinline(...) => {
-	return ds(dsinfo->extend(:#rest || staticarray),true,params) => givenblock	
+	return ds(dsinfo->extend(:#rest || staticarray),true,params)->silent(true)->invoke => givenblock	
 }
 
 define dsinfo->extend(...) => {
