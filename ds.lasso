@@ -25,6 +25,8 @@ define ds_connections => {
 	return $__ds_connections__
 }
 
+define ds_close_connections => ds_connections->foreach => {#1->close}
+
 //---------------------------------------------------------------------------------------
 //
 // 	datasource — english relay
@@ -493,8 +495,9 @@ define ds => type{
 		if(.silent) => {
 			error_code = #error->get(1)
 			error_msg = #error->get(2)
+			error_stack = #error->get(3)
 		else
-			#error->get(1) ? fail(#error->get(1),#error->get(2))			
+			#error->get(1) ? fail(#error->get(1),#error->get(2),#error->get(3))			
 		}
 		
 		{
