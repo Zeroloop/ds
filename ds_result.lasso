@@ -192,8 +192,8 @@ define ds_result => type {
 		return .'dsrows' := #rows		
 	}	
 
-	public rows(type::tag) => rows(\#type, -useOnCreate)
-	public rows(creator::memberstream, -useOnCreate::boolean=false) => {
+	public rows(type::tag) => .rows(\#type, true)
+	public rows(creator::memberstream, useOnCreate::boolean=false) => {
 		local(
 			gb = givenblock,
 			out = array,
