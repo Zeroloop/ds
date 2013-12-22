@@ -58,9 +58,11 @@ define statement => type {
 	}
 	
 	/*	Invoke DS */
-	public rows 				=> .invoke->rows => givenblock
-	public rows(type::tag) 		=> .invoke->rows(#type) => givenblock
-	public as(type::tag) 		=> .invoke->rows(#type) => givenblock
+	public rows 					=> .invoke->rows => givenblock
+	public rows(type::tag) 			=> .invoke->rows(#type) => givenblock
+	public rows(meth::memberstream)	=> .invoke->rows(#meth) => givenblock
+	public as(type::tag) 			=> .invoke->rows(#type) => givenblock
+	public as(meth::memberstream)	=> .invoke->rows(#meth) => givenblock
 
 	public do					=> .invoke => givenblock
 	public do(c::capture)		=> #c(.invoke->last)
