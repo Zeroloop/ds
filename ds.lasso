@@ -945,8 +945,9 @@ define ds => type{
 	public lastrow(col::string) => .last->rows->last->find(#col)
 	public lastrow(col::tag) 	=> .last->rows->last->find(#col->asstring)
 
-	public rows => (.first->rows => givenblock) || staticarray
-	public rows(type::tag) => (.first->rows(#type) => givenblock) || staticarray
+	public rows 					=> (.first->rows 		=> givenblock) || staticarray
+	public rows(type::tag)			=> (.first->rows(#type) => givenblock) || staticarray
+	public rows(meth::memberstream)	=> (.first->rows(#meth) => givenblock) || staticarray
 
 //---------------------------------------------------------------------------------------
 //
