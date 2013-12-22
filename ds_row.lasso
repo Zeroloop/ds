@@ -111,7 +111,8 @@ define ds_row => type{
 
 	//	Map behaviour
 	public find(col::string) => {
-		return .'modified_data'->find(#col) or .raw(#col)
+		.'modified_data'->size ? {#1->isnota(::void) ? return #1}(.'modified_data'->find(#col))
+		return .raw(#col)
 	}
 	public find(col::tag) => {
 		return .find(#col->asstring)
