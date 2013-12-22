@@ -112,8 +112,7 @@ define ds_row => type{
 	//	Map behaviour
 	public find(col::string) => {
 		.'modified_data'->size ? {#1->isnota(::void) ? return #1}(.'modified_data'->find(#col))
-		local(i) = .'index'->find(#col)
-		#i ? return .'row'->get(#i)
+		return .raw(#col)
 	}
 	public find(col::tag) => {
 		return .find(#col->asstring)
