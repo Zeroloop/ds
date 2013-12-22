@@ -32,6 +32,7 @@ define ds_result => type {
 	data 
 		public index::trait_searchable,
 		public cols::trait_foreach,
+		public types::trait_foreach,
 		public rows::staticarray,
 		public set::staticarray,
 		public found::integer=0,
@@ -164,7 +165,42 @@ define ds_result => type {
 
 	public columns => .cols->asstaticarray
 	public found_count => .found 
-	
+
+	public columntype(i::integer)::tag => {
+		match(#i) => {
+			case(lcapi_datasourcetypestring)
+				return ::string
+			case(lcapi_datasourcetypeinteger)
+				return ::integer
+			case(lcapi_datasourcetypeboolean)
+				return ::boolean
+			case(lcapi_datasourcetypeblob)
+				return ::bytes
+			case(lcapi_datasourcetypedecimal)
+				return ::decimal
+			case(lcapi_datasourcetypedate)
+				return ::date
+			case
+				return
+		}
+	}
+
+	public columntypes => {
+		.'types' ? return .'types'
+ 
+		local(types) = map
+
+		.'set'->get(INLINE_COLUMNINFO_POS)->foreach => {
+			#types->insert(
+				#1->get(INLINE_COLINFO_NAME_POS) = .columntype(
+					#1->get(INLINE_COLINFO_TYPE_POS)
+				)
+			)
+		}
+
+		return .'types' := #types 
+	}
+
 	public rows => {
 		
 		local(
@@ -192,25 +228,28 @@ define ds_result => type {
 		return .'dsrows' := #rows		
 	}	
 
-	public rows(type::tag) => .rows(\#type, true)
-	public rows(creator::memberstream, useOnCreate::boolean=false) => {
+	public rows(type::tag) => .rows(\#type,true) => givenblock
+	
+	public rows(creator::memberstream,useoncreate::boolean=false) => {
 		local(
 			gb = givenblock,
 			out = array,
 			row
-		) 
-		
-		if(#useOnCreate) => {
+		) 		
+		if(#useoncreate) => { 
 			.rows->foreach => {
-			    #row = #creator()
+				#row = #creator()
 				#row->oncreate(#1)
 				#out->insert(#row)
-			}
-		else 
+			}		
+		else
 			.rows->foreach => {
-				#out->insert(#creator(#1))
+				#out->insert(
+					#creator(#1)
+				)
 			}
 		}
+
 		if(#gb) => {
 			result_push(self)
 			#out->foreach => {
@@ -220,7 +259,7 @@ define ds_result => type {
 		}		
 		return #out
 	}
-
+	
 	public row(row::integer) => {
 		.'dsrows' ? return .'dsrows'->get(#row)
 		return ds_row(.'index',.'cols',.'rows'->get(#row),.'dsinfo',.'ds')

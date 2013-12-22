@@ -948,7 +948,8 @@ define ds => type{
 	public rows 					=> (.first->rows 		=> givenblock) || staticarray
 	public rows(type::tag)			=> (.first->rows(#type) => givenblock) || staticarray
 	public rows(meth::memberstream)	=> (.first->rows(#meth) => givenblock) || staticarray
-
+	public rows(creator::memberstream) => (.first->rows(#creator) => givenblock) || staticarray
+	
 //---------------------------------------------------------------------------------------
 //
 // 	SQL constructors
