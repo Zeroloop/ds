@@ -834,6 +834,18 @@ define ds => type{
 		#data->eachpair->asstaticarray
 	) => givenblock
 
+	public updaterow(totable::string, data::trait_positionallykeyed, key::any) => .execute(::update, 
+		#totable, 
+		.keyvalues(#key), 
+		#data
+	) => givenblock
+ 
+ 	public updaterow(totable::tag, data::trait_positionallykeyed, key::any) => .execute(::update, 
+ 		#totable->asstring, 
+ 		.keyvalues(#key), 
+ 		#data
+ 	) => givenblock
+ 
 	public updaterow(data::trait_keyedforeach,key::pair,...) => .execute(::update,
 		.table,
 		.keyvalues(tie((:#key), #rest || staticarray)->asstaticarray),
@@ -846,10 +858,7 @@ define ds => type{
 		#data->eachpair->asstaticarray
 	) => givenblock
 
-	public updaterow(totable::string, data::staticarray, key::any) => .execute(::update, #totable, .keyvalues(#key), #data) => givenblock
-
-	public updaterow(totable::tag, data::staticarray, key::any) => .execute(::update, #totable->asstring, .keyvalues(#key), #data) => givenblock
-
+ 
 
 //---------------------------------------------------------------------------------------
 //
