@@ -142,7 +142,7 @@ define ds_row => type{
 		.insert(#p)
 		#rest ? #rest->foreach => { .updatedata(#1) } 
 	}
-	public updatedata(values::staticarray) => {
+	public updatedata(values::trait_positionallyKeyed) => {
 		#values->foreach => {
 			#1->isa(::pair) ? .insert(#1) 
 		}
@@ -164,7 +164,7 @@ define ds_row => type{
 		.updatedata(:params)
 		.update
 	}
-	public update(values::staticarray) => {
+	public update(values::trait_positionallyKeyed) => {
 		.updatedata(#values)
 		.update
 	}
