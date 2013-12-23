@@ -150,7 +150,7 @@ define activerow => type {
 		.row->insert(#p)
 		#rest ? #rest->foreach => { .updatedata(#1) } 
 	}
-	public updatedata(data::staticarray) => {	
+	public updatedata(data::trait_positionallyKeyed) => {	
 		local(row) = .row			
 		#data->foreach => {
 			#1->isa(::pair) ? #row->insert(#1) 
@@ -173,7 +173,7 @@ define activerow => type {
 		.updatedata(:params)
 		.update
 	}
-	public update(values::staticarray) => {
+	public update(values::trait_positionallyKeyed) => {
 		.updatedata(#values)
 		.update 
 	}
