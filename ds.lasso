@@ -846,6 +846,10 @@ define ds => type{
 		#data->eachpair->asstaticarray
 	) => givenblock
 
+	public updaterow(totable::string, data::staticarray, key::any) => .execute(::update, #totable, .keyvalues(#key), #data) => givenblock
+
+	public updaterow(totable::tag, data::staticarray, key::any) => .execute(::update, #totable->asstring, .keyvalues(#key), #data) => givenblock
+
 
 //---------------------------------------------------------------------------------------
 //
