@@ -1,4 +1,4 @@
-# Datasource (ds)
+# Datasource (DS)
 ### A modern high performance replacement for Lasso inline.
 
 The Datasource suite is a collection of types that work with any data source supported by Lasso 9. It has been designed to directly replace inline — offering improved performance and new productive ways of working with data.
