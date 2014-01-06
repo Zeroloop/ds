@@ -228,28 +228,39 @@ define ds_result => type {
 		return .'dsrows' := #rows		
 	}	
 
-	public rows(type::tag) => .rows(\#type,true) => givenblock
-	
-	public rows(creator::memberstream,useoncreate::boolean=false) => {
+	public rows(type::tag) => {
 		local(
 			gb = givenblock,
 			out = array,
 			row
 		) 		
-		if(#useoncreate) => { 
-			.rows->foreach => {
-				#row = #creator()
-				#row->oncreate(#1)
-				#out->insert(#row)
-			}		
-		else
-			.rows->foreach => {
-				#out->insert(
-					#creator(#1)
-				)
-			}
-		}
+		.rows->foreach => {
+			#row = #type->gettype
+			#row->oncreate(#1)
+			#out->insert(#row)
+		}		
 
+		if(#gb) => {
+			result_push(self)
+			#out->foreach => {
+				#gb(#1)	
+			}
+			result_pop
+		}		
+		return #out
+	}
+
+	public rows(creator::memberstream) => {
+		local(
+			gb = givenblock,
+			out = array,
+			row
+		)
+		.rows->foreach => {
+			#out->insert(
+				#creator(#1)
+			)
+		}
 		if(#gb) => {
 			result_push(self)
 			#out->foreach => {
