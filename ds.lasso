@@ -495,7 +495,7 @@ define ds => type{
 		if(.silent) => {
 			error_code = #error->get(1)
 			error_msg = #error->get(2)
-			error_stack = #error->get(3)
+			error_stack = #error->get(3) || ''
 		else
 			#error->get(1) ? fail(#error->get(1),#error->get(2),#error->get(3))			
 		}
@@ -1046,7 +1046,7 @@ define dsinfo->extend(...) => {
 					#val->isa(::array)
 					? #val->foreach => {
 						#1->isanyof(::keyword,::pair) && #val := #1->value
-						? match(#p->name) => {
+						? match(#1->name) => {
 							case('datasource')
 								#dsinfo->hostdatasource 	= #val
 							case('name')
