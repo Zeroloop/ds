@@ -207,7 +207,10 @@ define activerow => type {
 //---------------------------------------------------------------------------------------
 
 	public create => {
-		local(row) = .row
+		local(
+			row = .row,
+			key = .find(.keycolumn)
+		)
 		
 		//	Should we create a row when no data? — it should probably cause an error
 		//	Inline just fails at the data source
@@ -227,11 +230,18 @@ define activerow => type {
 		)
 		
 		//	Allow for empty rows insert would normally fail if no data supplied 
-		'mysqlds,sqliteds' >> .ds->datasource && not .find(.keycolumn) 
+		'mysqlds,sqliteds' >> .ds->datasource && not #key && ! #row->modified_data->size 
 		? #row->insert(
 			#row->keycolumn = null
 		)		
+
 		#row = .ds->addrow(.table,#row->modified_data)
+
+		// If keyvalue is forced we must load the row
+		if(!#row && #key && ! .keyvalue) => {
+			#row = .ds->getrow(.table,.keycolumn = #key)
+		}
+
 		#row ? .'row' := #row | fail('Unable to create row')
 	}
 		
