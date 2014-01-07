@@ -181,10 +181,6 @@ define ds_row => type{
 
 	// Clear out the modified_data store
 	public storeModified => {
-		local(new_cols)  = array
-		local(new_data)  = array
-		local(new_index) = .row->size
-
 		.modified_data->forEachNode2 => {
 			local(key)   = #1->key
 			local(value) = #1->value
