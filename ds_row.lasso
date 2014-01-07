@@ -190,22 +190,10 @@ define ds_row => type{
 			local(value) = #1->value
 			local(index) = .index->find(#key)
 
-			// Deal with the item not being in storage already
-			if(#index == void) => {
-				#new_cols->insert(#key)
-				#new_data->insert(#value)
-				#new_index += 1
-				.index->insert(#key=#new_index)
-
-			// Item is there, just need to update the data
-			else
-				.row->get(#index) = #value
-			}
+			// Update data if item is there
+			#index != void
+				? .row->get(#index) = #value
 		}
-
-		// Merge in any new data
-		#new_data->size > 0
-			? {.row += #new_data->asStaticArray; .cols += #new_cols->asStaticArray}()
 
 		.modified_data = map
 	}
