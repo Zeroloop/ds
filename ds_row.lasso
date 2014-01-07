@@ -169,26 +169,23 @@ define ds_row => type{
 		.update
 	}
 	public update => {
-		//!debug('ds_update' = .modified_data)
 		if(.modified_data->size) => {
 			.ds->update(self)
 			.storeModified
-		}
-		
-		//	? .ds->execute(::update,.table->asstring,.keyvalues,.modified_data->eachpair->asstaticarray)
-	
+		}		
 	}
 
 	// Clear out the modified_data store
-	public storeModified => {
+	public storemodified => {
 		.modified_data->forEachNode2 => {
-			local(key)   = #1->key
-			local(value) = #1->value
-			local(index) = .index->find(#key)
+			local(
+				key   = #1->key,
+				value = #1->value,
+				index = .index->find(#key)
+			)
 
 			// Update data if item is there
-			#index != void
-				? .row->get(#index) = #value
+			#index ? .row->get(#index) = #value
 		}
 
 		.modified_data = map
