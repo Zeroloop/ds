@@ -170,11 +170,44 @@ define ds_row => type{
 	}
 	public update => {
 		//!debug('ds_update' = .modified_data)
-		.modified_data->size
-		? .ds->update(self)
+		if(.modified_data->size) => {
+			.ds->update(self)
+			.storeModified
+		}
 		
 		//	? .ds->execute(::update,.table->asstring,.keyvalues,.modified_data->eachpair->asstaticarray)
 	
+	}
+
+	// Clear out the modified_data store
+	public storeModified => {
+		local(new_cols)  = array
+		local(new_data)  = array
+		local(new_index) = .row->size
+
+		.modified_data->forEachNode2 => {
+			local(key)   = #1->key
+			local(value) = #1->value
+			local(index) = .index->find(#key)
+
+			// Deal with the item not being in storage already
+			if(#index == void) => {
+				#new_cols->insert(#key)
+				#new_data->insert(#value)
+				#new_index += 1
+				.index->insert(#key=#new_index)
+
+			// Item is there, just need to update the data
+			else
+				.row->get(#index) = #value
+			}
+		}
+
+		// Merge in any new data
+		#new_data->size > 0
+			? {.row += #new_data->asStaticArray; .cols += #new_cols->asStaticArray}()
+
+		.modified_data = map
 	}
 
 //---------------------------------------------------------------------------------------
@@ -231,4 +264,9 @@ define ds_row => type{
 	}
 	
 }
+
+// Work around for older versions of 9.2
+// map->forEachNode should be public in 9.2.7
+protect => {\map}
+define map->forEachNode2 => .forEachNode => givenBlock
 ?>
