@@ -778,13 +778,13 @@ define ds => type{
 				#d->connection 	= #dsinfo->connection
 				#d->prepared 	= #dsinfo->prepared
 				#d->refobj 		= #dsinfo->refobj			
-			}	
+			}
+
+			#d->statement = #dsinfo->statement 
 		}
 
 		local(out) = .invoke(#dsinfo) => givenblock 
 
-	
-			
 		return #firstrow ? .firstrow | #out
 	} 
 
@@ -886,29 +886,41 @@ define ds => type{
 
 	public blankrow => ds_row(map,staticarray,staticarray,.dsinfo)
 
-	public getrow(keyvalue) 					=> .getfrom(.table,#keyvalue)->first
+	public getrow(keyvalue::any,...) => .execute(::search,
+		.table,
+		.keyvalues(tie((:#keyvalue), #rest || staticarray)->asstaticarray),
+		staticarray, 
+		true 
+	)
 
-	public getrows(keyvalue,...) 				=> .getfrom(.table,params)
+	public getrows(keyvalue) 					=> .getfrom(.table,params)
+	public getrows(keyvalue::pair,p::pair,...) 	=> .getfrom(.table,params)
 	public getrows(keyvalues::trait_foreach) 	=> .getfrom(.table,#keyvalues)
 
-	public getfrom(table::string,keyvalue::string) 		=> .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
-	public getfrom(table::string,keyvalue::integer) 	=> .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
-	public getfrom(table::string,key::pair) 			=> .execute(::search,#table,.keyvalues(#key),staticarray)->rows
+	public getfrom(table::string,keyvalue::string) 	=> .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
+	public getfrom(table::string,keyvalue::integer) => .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
+	public getfrom(table::string,key::pair) 		=> .execute(::search,#table,.keyvalues(#key),staticarray)->rows
 
 	public getfrom(table::string,keyvalues::trait_foreach) 	=> {		
 		local(
+			matchall = false,
 			params = array(
 				-table = #table,
-				-opbegin = 'or',
 				-op = 'eq'
 			)
 		)
 
 		with p in #keyvalues do {
-			#p->isanyof(::pair,::keyword)			
-			? #params->insert(#p)
-			| #params->insert(.keycolumn = #p)
+			match(#p->type) => {
+				case(::pair,::keyword)
+					#params->insert(#p)		
+				case(::boolean)
+					#p ? #matchall = true
+				case
+					#params->insert(.keycolumn = #p)	
+			}
 		}
+		not #matchall ? #params->insert(-opbegin = 'or',1)
 
 		return .search(:#params->asstaticarray)->rows
 		
