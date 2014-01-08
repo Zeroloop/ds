@@ -209,15 +209,16 @@ define activerow => type {
 	public create => {
 		local(
 			row = .row,
-			key = .find(.keycolumn)
+			key 
 		)
 		
 		//	Should we create a row when no data? — it should probably cause an error
-		//	Inline just fails at the data source
 
 		.generate_uuid ? #row->insert(
 			.keycolumn = lasso_uniqueid
 		)
+
+		#key = .find(.keycolumn)
 
 		// Add timestamp when column specified
 		.created_column ? #row->insert(
@@ -242,7 +243,7 @@ define activerow => type {
 			#row = .ds->getrow(.table,.keycolumn = #key)
 		}
 
-		#row ? .'row' := #row | fail('Unable to create row')
+		#row ? .'row' := #row | fail('Unable to create row (ensure correct ->keycolumn(\'name\') is specified)')
 	}
 		
 //---------------------------------------------------------------------------------------
