@@ -1028,7 +1028,6 @@ define dsinfo->extend(...) => {
 					?	#keycolumns->last->get(3) = #val
 					|	#keycolumns->insert((:null,lcapi_datasourceopeq,#val))
 				case('keycolumn','keyfield')
-					.keycolumn = #val
 					#keycolumns->size 
 					?	#keycolumns->last->get(1) = #val
 					|	#keycolumns->insert((:#val,lcapi_datasourceopeq,null))						
