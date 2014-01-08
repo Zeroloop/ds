@@ -91,7 +91,7 @@ define statement => type {
 			case(::integer)
 				return #val
 			case(::date)
-				return #val->format('%q')
+				return `'` + #val->asstring->encodesql+`'`
 			case(::null)
 				return 'NULL'
 			case(::void)
