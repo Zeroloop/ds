@@ -691,6 +691,7 @@ define ds => type{
 		return .invoke->last
 	}
 	
+	public statement	=> .dsinfo->statement
 	public datasource	=> .dsinfo->hostdatasource
 	public database 	=> .dsinfo->databasename
 	public table 		=> .dsinfo->tablename
@@ -1131,7 +1132,9 @@ define dsinfo->extend(...) => {
 					}
 			}
 		else(#p->isa(::pair))
-			#columns->insert((:#p->name,#op,#p->value))
+			#columns->insert(
+				(:#p->name,#op,#p->value->isa(::date) ? #p->value->asstring | #p->value)
+			)
 		}
 	}
 	
