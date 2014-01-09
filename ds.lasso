@@ -654,7 +654,7 @@ define ds => type{
 	
 	private keyvalue(p::string) => (:#p, lcapi_datasourceopeq,null)
 	private keyvalue(p::tag) => (:#p->asstring, lcapi_datasourceopeq,null)
-	private keyvalue(p::pair) => (:#p->name, lcapi_datasourceopeq,#p->value)
+	private keyvalue(p::pair) => (:#p->name, lcapi_datasourceopeq,.filterinput(#p->value))
 
 //---------------------------------------------------------------------------------------
 //
