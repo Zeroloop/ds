@@ -204,7 +204,6 @@ define ds_result => type {
 	public rows => {
 		
 		local(
-			gb = givenblock,
 			rows = .'dsrows'
 		)
 		
@@ -216,61 +215,53 @@ define ds_result => type {
 				)
 			}
 		}
-		
-		if(#gb) => {
-			result_push(self)
-			#rows->foreach => {
-				#gb(#1)
-			}
-			result_pop
-		}
 
-		return .'dsrows' := #rows		
+		.'dsrows' = #rows
+		
+		.gb(#rows) => givenblock
+
+		return #rows		
 	}	
 
 	public rows(type::tag) => {
 		local(
-			gb = givenblock,
 			out = array,
-			row
-		) 		
+			base = #type->gettype,
+			row   
+		)
 		.rows->foreach => {
-			#row = #type->gettype
-			#row->oncreate(#1)
+			#row = #base->ascopy 
+			#row->oncreate(#1)		
 			#out->insert(#row)
 		}		
-
-		if(#gb) => {
-			result_push(self)
-			#out->foreach => {
-				#gb(#1)	
-			}
-			result_pop
-		}		
+		.gb(#out) => givenblock		
 		return #out
 	}
 
 	public rows(creator::memberstream) => {
 		local(
-			gb = givenblock,
-			out = array,
-			row
+			out = array 
 		)
 		.rows->foreach => {
 			#out->insert(
 				#creator(#1)
 			)
 		}
-		if(#gb) => {
-			result_push(self)
-			#out->foreach => {
-				#gb(#1)	
-			}
-			result_pop
-		}		
+		.gb(#out) => givenblock		
 		return #out
 	}
 	
+	private gb(rows::array) => {
+		local(gb) = givenblock
+		if(#gb) => {
+			result_push(self)
+			#rows->foreach => {
+				#gb(#1)	
+			}
+			result_pop
+		}	
+	}
+
 	public row(row::integer) => {
 		.'dsrows' ? return .'dsrows'->get(#row)
 		return ds_row(.'index',.'cols',.'rows'->get(#row),.'dsinfo',.'ds')
