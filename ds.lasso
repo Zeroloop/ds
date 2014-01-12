@@ -886,6 +886,8 @@ define ds => type{
 
 	public blankrow => ds_row(map,staticarray,staticarray,.dsinfo)
 
+	public getrow(keyvalue::integer) => .getrow(.keycolumn = #keyvalue)
+	public getrow(keyvalue::string) => .getrow(.keycolumn = #keyvalue)
 	public getrow(keyvalue::any,...) => .execute(::search,
 		.table,
 		.keyvalues(tie((:#keyvalue), #rest || staticarray)->asstaticarray),
