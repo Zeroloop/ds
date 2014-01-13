@@ -44,7 +44,7 @@ define ds_row => type{
 		)
 		.'dsinfo'->keycolumns->foreach => {
 			#col = #1->get(1)
-			#out->insert((:#col,#1->get(2),.find(#col)))
+			#out->insert((:#col,#1->get(2),.raw(#col)))
 		}
 		return #out->asstaticarray
 	}
