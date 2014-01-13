@@ -465,7 +465,7 @@ define ds => type{
 			result,
 			error,
 			affected,
-			
+			keycolumns,
 			index,
 			cols,
 			col 
@@ -477,7 +477,14 @@ define ds => type{
 		.store
 
 		protect => {
+			// Searches can not contain keycolumns (remove when null)
+			#keycolumns = #dsinfo->keycolumns
+			#keycolumns->size && #keycolumns->get(1)->get(3)->isa(::null) ? #dsinfo->keycolumns = staticarray
+		
 			handle => {
+				//	restore keycolumn info
+				#dsinfo->keycolumns = #keycolumns
+		
 				//	shared error per request
 				#error = (: error_code, error_msg, error_stack)
 				
@@ -890,8 +897,8 @@ define ds => type{
 	public getrow(keyvalue::string) => .getrow(.keycolumn = #keyvalue)
 	public getrow(keyvalue::any,...) => .execute(::search,
 		.table,
-		.keyvalues(tie((:#keyvalue), #rest || staticarray)->asstaticarray),
-		staticarray, 
+		staticarray,
+		tie((:#keyvalue), #rest || staticarray)->asstaticarray,
 		true 
 	)
 
@@ -939,8 +946,7 @@ define ds => type{
 	
 	public search(...) => {
 		.dsinfo->extend(:#rest || staticarray)
-		.dsinfo->action = lcapi_datasourcesearch
-		.keycolumn = ''		
+		.dsinfo->action = lcapi_datasourcesearch	
 		local(r) = .invoke => givenblock	
 		return #r
 	}
