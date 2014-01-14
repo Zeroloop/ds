@@ -479,7 +479,9 @@ define ds => type{
 		protect => {
 			// Searches can not contain keycolumns (remove when null)
 			#keycolumns = #dsinfo->keycolumns
-			#keycolumns->size && #keycolumns->get(1)->get(3)->isa(::null) ? #dsinfo->keycolumns = staticarray
+			
+			#dsinfo->action == lcapi_datasourcesearch && #keycolumns->size && #keycolumns->get(1)->get(3)->isa(::null) 
+			? #dsinfo->keycolumns = staticarray
 		
 			handle => {
 				//	restore keycolumn info
