@@ -895,7 +895,7 @@ define ds => type{
 
 	public getrow(keyvalue::integer) => .getrow(.keycolumn = #keyvalue)
 	public getrow(keyvalue::string) => .getrow(.keycolumn = #keyvalue)
-	public getrow(keyvalue::any,...) => .execute(::search,
+	public getrow(keyvalue::pair,...) => .execute(::search,
 		.table,
 		staticarray,
 		tie((:#keyvalue), #rest || staticarray)->asstaticarray,

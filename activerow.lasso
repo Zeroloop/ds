@@ -240,7 +240,7 @@ define activerow => type {
 
 		// If keyvalue is forced we must load the row
 		if(!#row && #key && ! .keyvalue) => {
-			#row = .ds->getrow(.table,.keycolumn = #key)
+			#row = .ds->getfrom(.table,.keycolumn = #key)->first
 		}
 
 		#row ? .'row' := #row | fail('Unable to create row (ensure correct ->keycolumn(\'name\') is specified)')
