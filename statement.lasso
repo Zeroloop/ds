@@ -1,4 +1,4 @@
-<?lassoscript
+x<?lassoscript
 //=======================================================================================
 //
 //	DS for Lasso 9 — Free to use, license TBD
@@ -212,7 +212,11 @@ define select_statement => type {
 	
 		with item in params do {
 			#item->isanyof(::pair,::keyword)
-			? #out = #out->where(#item->name->asstring + ' = ' + .encode(#item->value))
+			? #out = #out->where(
+				#item->name->asstring + 
+				(#item->value->isa(::null) ? ' IS ' | ' = ') +
+				.encode(#item->value)
+			 )
 			| #out = #out->where(#item)
 		}	
 		
