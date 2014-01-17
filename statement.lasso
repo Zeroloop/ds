@@ -1,4 +1,4 @@
-x<?lassoscript
+<?lassoscript
 //=======================================================================================
 //
 //	DS for Lasso 9 — Free to use, license TBD
