@@ -824,6 +824,8 @@ define ds => type{
 
 	public addrow(totable::tag,data::staticarray) => .execute(::add,#totable->asstring,staticarray,#data,true) => givenblock
 
+	public addrow(data::staticarray) => .execute(::add,.table,staticarray,#data,true) => givenblock
+
 //---------------------------------------------------------------------------------------
 //
 // 	Update row
