@@ -214,7 +214,7 @@ define select_statement => type {
 			#item->isanyof(::pair,::keyword)
 			? #out = #out->where(
 				#item->name->asstring + 
-				(#item->isanyof(::array,::staticarray) ? ' ' | (#item->value->isa(::null) ? ' IS ' | ' = ')) +
+				(#item->value->isanyof(::array,::staticarray) ? ' ' | (#item->value->isa(::null) ? ' IS ' | ' = ')) +
 				.encode(#item->value)
 			 )
 			| #out = #out->where(#item)
