@@ -477,26 +477,32 @@ define ds => type{
 		.store
 
 		protect => {
-			// Searches can not contain keycolumns (remove when null)
-			#keycolumns = #dsinfo->keycolumns
-			
-			#dsinfo->action == lcapi_datasourcesearch && #keycolumns->size && #keycolumns->get(1)->get(3)->isa(::null) 
-			? #dsinfo->keycolumns = staticarray
-		
+
+			//	Ensure error stack is set
 			handle => {
-				//	restore keycolumn info
-				#dsinfo->keycolumns = #keycolumns
-		
-				//	shared error per request
+
+				//	Shared error per request
 				#error = (: error_code, error_msg, error_stack)
+
+				//	Restore keycolumn info
+				#dsinfo->keycolumns = #keycolumns
 				
+				//	Output errors		
 				if(error_code) => {
 					protect => {
 						debug(#dsinfo->statement)
 					}
-					stdoutnl('\nds error: '+error_msg+'\n')
+					stdoutnl('\nds error: ' + error_msg + '\n')
 				}
 			}
+			
+			// Store keycolumns for restore
+			#keycolumns = #dsinfo->keycolumns
+			
+			// Searches can not contain keycolumns (remove when null)
+			#dsinfo->action == lcapi_datasourcesearch && #keycolumns->size && #keycolumns->get(1)->get(3)->isa(::null) 
+			? #dsinfo->keycolumns = staticarray
+		
 			#result = #capi->invoke(#dsinfo)			
 			#result ? return #result
 		}
@@ -805,6 +811,8 @@ define ds => type{
 
 	public addrow(p::pair,...) => .execute(::add,.table,staticarray,params,true) => givenblock
 	public addrow(p::trait_keyedforeach) => .execute(::add,.table,staticarray,#p->eachpair->asstaticarray,true) => givenblock
+	public addrow(p::trait_foreach) => .execute(::add,.table,staticarray,#p->asstaticarray,true) => givenblock
+	public addrow(data::staticarray) => .execute(::add,.table,staticarray,#data,true) => givenblock
 
 	public addrow(totable::string,data::trait_keyedforeach) => .execute(::add,
 		#totable,
@@ -823,8 +831,6 @@ define ds => type{
 	public addrow(totable::string,data::staticarray) => .execute(::add,#totable,staticarray,#data,true) => givenblock
 
 	public addrow(totable::tag,data::staticarray) => .execute(::add,#totable->asstring,staticarray,#data,true) => givenblock
-
-	public addrow(data::staticarray) => .execute(::add,.table,staticarray,#data,true) => givenblock
 
 //---------------------------------------------------------------------------------------
 //
