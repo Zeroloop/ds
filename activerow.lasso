@@ -53,7 +53,7 @@ define activerow => type {
 	}
 
 	public oncreate(key::pair,...) => {
-		.row = .ds->getrow(#key)
+		.row = .ds->getrow(:params)
 		.updatedata(:params)
 		return self
 	}
