@@ -12,17 +12,18 @@
 //---------------------------------------------------------------------------------------
 
 define ds_connections => {
-	if(var(::__ds_connections__)->isnota(::map)) => {
-		$__ds_connections__ = map
+	if(var(__ds__connections__)->isnota(::map)) => {
+		$__ds__connections__ = map
+
 		web_request ? define_atend({
 			ds_connections->foreach => {				
-				//stdout(#1->key+': ')
+			//	stdout(#1->key+': ')
 				#1->close
-				//stdoutnl('closed')	
+			//	stdoutnl('closed')	
 			}
 		})
 	} 
-	return $__ds_connections__
+	return $__ds__connections__
 }
 
 define ds_close_connections => ds_connections->foreach => {#1->close}
@@ -222,9 +223,9 @@ define ds => type{
 		.'dsinfo' = #dsinfo
 		
 		local(
-			active 	= ds_connections->find(#key),
 			dsinfo 	= .'dsinfo',
 			hostinfo,
+			store = true,
 			gb = givenblock
 		)
 	
@@ -233,37 +234,15 @@ define ds => type{
 
 		handle => { 
 			//	Set keycolumn info
-			.keycolumn = #keycolumn || .keycolumn	
+			.keycolumn = #keycolumn || .keycolumn
+			#store ? .store // Details only (connection unlikely)
 		}
 		
-		if(#active) => { 
-		
-			//	Check for existing connection
-			.'capi' 	= #active->capi
-			
-			//	Ensure thread safe
-			//.'dsinfo' = #active->dsinfo//->makeinheritedcopy
-
-			local(d) = #active->dsinfo
-			
-			//.'dsinfo' = #active->dsinfo->makeinheritedcopy
-			#dsinfo->hostdatasource 	= #d->hostdatasource
-			#dsinfo->hostid 			= #d->hostid
-			#dsinfo->hostname 			= #d->hostname
-			#dsinfo->hostport 			= #d->hostport
-			#dsinfo->hostusername 		= #d->hostusername
-			#dsinfo->hostpassword 		= #d->hostpassword
-			#dsinfo->hosttableencoding 	= #d->hosttableencoding
-			#dsinfo->hostschema 		= #d->hostschema
-
-			#dsinfo->connection 		= #d->connection
-			#dsinfo->prepared 			= #d->prepared
-			#dsinfo->refobj 			= #d->refobj
-
+		if(.primed) => { 
+			// Reusing details + connection (if active)
+			#store = false 
 		else(#host)			
-	
 			//	Host specified, skip look up — fast
-	
 			#dsinfo->hostdatasource 	= #datasource
 			#dsinfo->hostid 			= 0
 			#dsinfo->hostname 			= #host
@@ -428,6 +407,71 @@ define ds => type{
 		ds_connections->insert(.'key' = self)
 	}
 
+	// Load Connection
+	// Connection could be stored but not active
+	// We still want to use the details (dsinfo)
+
+	// On invoke we must ensure we use an active connection
+
+	private primed => {
+	
+		local(
+			dsinfo = .dsinfo,
+			active = ds_connections->find(.key),
+			d
+		)
+
+		if(#active) => { 
+			#d = #active->dsinfo
+
+			//	Check for existing connection
+			.'capi' 	= #active->capi
+			
+			//	Ensure thread safe
+			#dsinfo->hostdatasource    = #d->hostdatasource
+			#dsinfo->hostid            = #d->hostid
+			#dsinfo->hostname          = #d->hostname
+			#dsinfo->hostport          = #d->hostport
+			#dsinfo->hostusername      = #d->hostusername
+			#dsinfo->hostpassword      = #d->hostpassword
+			#dsinfo->hosttableencoding = #d->hosttableencoding
+			#dsinfo->hostschema        = #d->hostschema
+
+			#dsinfo->connection = #d->connection
+			#dsinfo->prepared   = #d->prepared
+			#dsinfo->refobj     = #d->refobj
+
+			return true
+		}
+
+		return false 
+	}
+
+	private active => {
+		// Do nothing if has connection
+		 .dsinfo->connection ? return true
+
+		local(
+			dsinfo = .dsinfo,
+			active = ds_connections->find(.key),
+			d
+		)
+	
+		if(#active && #active->dsinfo->connection) => { 
+			#d = #active->dsinfo
+
+			//	Re use existing connection
+			.'capi'             = #active->capi
+			#dsinfo->connection = #d->connection
+			#dsinfo->prepared   = #d->prepared
+			#dsinfo->refobj     = #d->refobj
+
+			return true
+
+		}
+
+	}
+
 	public close => {
 		.dsinfo->action = lcapi_datasourcetickle
 		.'capi'->invoke(.dsinfo)
@@ -472,9 +516,8 @@ define ds => type{
 		)
 	
 		fail_if(not #capi, 'No datasource: check -database, -table or -datasource')
-		
-		//	Store connection for re-use
-		.store
+
+		not .active ? .store 
 
 		protect => {
 
