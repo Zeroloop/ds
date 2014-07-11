@@ -1043,12 +1043,27 @@ define ds => type{
 //
 //---------------------------------------------------------------------------------------
 
-	public select(...) 	=> select_statement(self)->select(:#rest || staticarray) => givenblock
-	public where(...) 	=> select_statement(self)->where(:#rest || staticarray) => givenblock
-	public insert(...)	=> insert_statement(self) => givenblock
-	public update(...)	=> update_statement(self)->set(:#rest || staticarray) => givenblock
+	public select_statement => select_statement(self) => givenblock
+	public insert_statement => insert_statement(self) => givenblock
+	public update_statement => update_statement(self) => givenblock
 
-	public insertinto(table::string,row::map,update::boolean=false)	=> insert_statement(self)->into(#table)
+	public select(...) => .select_statement->select(:#rest || staticarray('*')) => givenblock
+	public where(...)  => .select_statement->where(:#rest || staticarray) => givenblock
+	public insert(...) => .insert_statement => givenblock
+
+	public insert(table::tag,...columns)                => .insert_statement->into(#table,#columns) => givenblock
+	public insert(table::string,...columns)             => .insert_statement->into(#table,#columns) => givenblock
+	public insert(table::tag,columns::trait_foreach)    => .insert_statement->into(#table,#columns) => givenblock
+	public insert(table::string,columns::trait_foreach) => .insert_statement->into(#table,#columns) => givenblock
+
+	public update(table::tag,...where)                => .update_statement->update(#table,#where) => givenblock
+	public update(table::string,...where)             => .update_statement->update(#table,#where) => givenblock
+	public update(table::tag,where::trait_foreach)    => .update_statement->update(#table,#where) => givenblock
+	public update(table::string,where::trait_foreach) => .update_statement->update(#table,#where) => givenblock
+
+	public update(...)                    => .update_statement->set(:#rest || staticarray) => givenblock
+
+	public insertinto(table::string,row::map,update::boolean=false)	=> .insert_statement->into(#table)
 																			->columns(#row->keys)
 																			->onduplicate(#update)
 																			->addrow(#row) => (givenblock || {})

@@ -87,9 +87,9 @@ define statement => type {
 	public encode(val::any) => {
 		match(#val->type) => {
 			case(::decimal)
-				return #val
+				return #val->asstring
 			case(::integer)
-				return #val
+				return #val->asstring
 			case(::date)
 				return `'` + #val->asstring->encodesql+`'`
 			case(::null)
@@ -110,6 +110,11 @@ define statement => type {
 			case
 				return `'`+string(#val)->encodesql+`'`
 		}
+	}
+
+	public encode(item::pair) => {
+		local(delim) = (#item->value->isanyof(::array,::staticarray) ? ' ' | (#item->value->isa(::null) ? ' IS ' | ' = '))
+		return #item->name->asstring + #delim + .encode(#item->value)
 	}
 	
 	public encodecol(col::tag) => '`' + #col->asstring + '`'
@@ -219,9 +224,7 @@ define select_statement => type {
 		with item in params do {
 			#item->isanyof(::pair,::keyword)
 			? #out = #out->where(
-				#item->name->asstring + 
-				(#item->value->isanyof(::array,::staticarray) ? ' ' | (#item->value->isa(::null) ? ' IS ' | ' = ')) +
-				.encode(#item->value)
+				.encode(pair(#item->name,#item->value))
 			 )
 			| #out = #out->where(#item)
 		}	
@@ -359,8 +362,10 @@ define insert_statement => type {
 		return .into(#ds->dsinfo->tablename)
 	}
 	
-	public into(table::string,...) 	=> .switch(::into,array(#table))->merge(::columns,#rest || staticarray) => givenblock	
-	public into(table::tag,...) 	=> .switch(::into,array(#table->asstring))->merge(::columns,#rest || staticarray) => givenblock
+	public into(table::string,...columns)             => .switch(::into,array(#table))->merge(::columns,#columns || staticarray) => givenblock	
+	public into(table::tag,...columns)                => .switch(::into,array(#table->asstring))->merge(::columns,#columns || staticarray) => givenblock
+	public into(table::string,columns::trait_foreach) => .switch(::into,array(#table))->merge(::columns,#columns->asstaticarray) => givenblock	
+	public into(table::tag,columns::trait_foreach)    => .switch(::into,array(#table->asstring))->merge(::columns,#columns->asstaticarray) => givenblock
 
 	public columns(column::tag,...) 	=> .merge(::columns,params) => givenblock
 	public columns(column::string,...) 	=> .merge(::columns, params) => givenblock
@@ -421,7 +426,11 @@ define insert_statement => type {
 		}
 		return .addrow(#r) => givenblock
 	}
-	
+
+
+
+
+
 
 //---------------------------------------------------------------------------------------
 //
@@ -461,6 +470,17 @@ define insert_statement => type {
 		#rows->foreach => {
 			.addrow(#1)
 		}
+		return .invokeifblock => givenblock
+	}
+
+//---------------------------------------------------------------------------------------
+//
+//	Values (array sig)
+//
+//---------------------------------------------------------------------------------------
+
+	public values(rows::array) => {
+		.addrows(#rows)
 		return .invokeifblock => givenblock
 	}
 
@@ -546,12 +566,11 @@ define update_statement => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public update(table::tag,...) 		=> .switch(::update,params->asarray) => givenblock
-	public update(table::string,...) 	=> .switch(::update,params->asarray) => givenblock
-	public update(tables::array) 		=> .switch(::update,#tables) => givenblock
-	public where(expr::array)			=> .switch(::where,#expr) => givenblock
-	public join(tables::array) 			=> .switch(::join,#tables) => givenblock
-	public join(tables::array) 			=> .switch(::join,#tables) => givenblock
+	public update(table::tag,...where)    => .switch(::update,array(#table->asstring))->where(#where || staticarray) => givenblock	
+	public update(table::string,...where) => .switch(::update,array(#table))->where(#where || staticarray) => givenblock	
+	public update(tables::array)          => .switch(::update,#tables) => givenblock
+	public join(tables::array)            => .switch(::join,#tables) => givenblock
+	public join(tables::array)            => .switch(::join,#tables) => givenblock
 
 //---------------------------------------------------------------------------------------
 //
@@ -574,8 +593,14 @@ define update_statement => type {
 	public where(expr::pair,...)		=> {
 		with item in params do {
 			#item->isanyof(::pair,::keyword)
-			? .where(#item->name->asstring + ' = ' + .encode(#item->value))
+			? .where(.encode(#item))
 			| .where(#item)
+		}		
+		return .invokeifblock => givenblock
+	}
+	public where(p::trait_foreach)		=> {
+		with item in delve(#p) do {
+			.where(.encode(#item))
 		}		
 		return .invokeifblock => givenblock
 	}
