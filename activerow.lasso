@@ -31,15 +31,16 @@ define activerow => type {
 //---------------------------------------------------------------------------------------
 
 	public oncreate => {}
+
 	public oncreate(row::ds_row) => {
 		.row = #row
 		return self
 	}
-	public oncreate(ds::ds) => {
-		.'ds' = #ds
-		return self
-	}
 
+	public oncreate(ds::ds) => {
+		.ds = #ds
+	}
+	
 	public oncreate(keyvalue::string) => {
 		.row = .ds->getrow(#keyvalue)
 		.updatedata(.keycolumn = #keyvalue)
@@ -56,6 +57,21 @@ define activerow => type {
 		.row = .ds->getrow(:params)
 		.updatedata(:params)
 		return self
+	}
+
+	public oncreate(databasetable::tag) => {
+		local(s) = #databasetable->asstring->splitextension('.')
+
+		if(.ds->isa(::ds) && #s->value) => {
+			// Reuse ds connection and switch database + table
+			.ds = .ds->database(#s->first)->table(#s->second)
+		else(#s->value)
+			// Set a new ds connection
+			.ds = ds(#databasetable)
+		else
+			// Force a ::database.table signature
+			fail(-1,'Table not specified, format is active_row(::database.table)')
+		}
 	}
 	
 //---------------------------------------------------------------------------------------
@@ -274,16 +290,15 @@ define activerow => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public invoke(col::tag) 		=> .'row'->find(#col->asstring)
-	public invoke(col::string) 		=> .'row'->find(#col)
-	public invoke=(val,col::tag) 	=> { .'row'->find(#col->asstring) = #val }
-	public invoke=(val,col::string) => { .'row'->find(#col) = #val }
+	public invoke(col::tag) 		=> .row->find(#col->asstring)
+	public invoke(col::string) 		=> .row->find(#col)
+	public invoke=(val,col::tag) 	=> { .row->find(#col->asstring) = #val }
+	public invoke=(val,col::string) => { .row->find(#col) = #val }
 	
-	
-	public find(col::tag) 			=> .'row'->find(#col->asstring)
-	public find(col::string) 		=> .'row'->find(#col)
-	public find=(val,col::tag) 		=> { .'row'->find(#col->asstring) = #val }
-	public find=(val,col::string) 	=> { .'row'->find(#col) = #val }
+	public find(col::tag) 			=> .row->find(#col->asstring)
+	public find(col::string) 		=> .row->find(#col)
+	public find=(val,col::tag) 		=> { .row->find(#col->asstring) = #val }
+	public find=(val,col::string) 	=> { .row->find(#col) = #val }
 
 //---------------------------------------------------------------------------------------
 //
@@ -291,9 +306,8 @@ define activerow => type {
 //
 //---------------------------------------------------------------------------------------
 	
-	public asmap => .'row'->asmap
-	public asarray => .'row'->asarray
-
+	public asmap => .row->asmap
+	public asarray => .row->asarray
 
 }
 
