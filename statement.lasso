@@ -162,6 +162,9 @@ define select_statement => type {
 		return .from(#ds->dsinfo->tablename)
 	}
 
+
+	// This has been deemed too confusing
+	/*
 	public asstring => {
 		if(.ds) => {
 			return .rows->join('')
@@ -169,6 +172,9 @@ define select_statement => type {
 			return .statement
 		}
 	}
+	*/
+
+	public asstring => .type->asstring 
 
 	
 //---------------------------------------------------------------------------------------
