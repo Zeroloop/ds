@@ -62,10 +62,7 @@ define activerow => type {
 	public oncreate(databasetable::tag) => {
 		local(s) = #databasetable->asstring->splitextension('.')
 
-		if(.ds->isa(::ds) && #s->value) => {
-			// Reuse ds connection and switch database + table
-			.ds = .ds->database(#s->first)->table(#s->second)
-		else(#s->value)
+		if(#s->value) => {
 			// Set a new ds connection
 			.ds = ds(#databasetable)
 		else
