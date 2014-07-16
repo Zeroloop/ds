@@ -270,6 +270,7 @@ define select_statement => type {
 
 	public ascount => .ascopy->select('COUNT(*) as count')
 						->orderby(false)
+						->groupby(false)
 						->limit(false)
 
 //---------------------------------------------------------------------------------------
