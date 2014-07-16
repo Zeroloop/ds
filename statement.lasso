@@ -217,20 +217,24 @@ define select_statement => type {
 	public from(table::string,...) 		=> .switch(::from,params->asarray) => givenblock
 
 	public join(table::string,...) 		=> .merge(::join,params) => givenblock
-	public where(expr::string,...)		=> .merge(::where,params) => givenblock
-	public where(expr::pair,...)		=> {
-		local(out) = .copy
-	
-		with item in params do {
-			#item->isanyof(::pair,::keyword)
-			? #out = #out->where(
-				.encode(pair(#item->name,#item->value))
-			 )
-			| #out = #out->where(#item)
-		}	
-		
-		return #out->invokeifblock => givenblock
+	public where(expr::string,...)		=> .where(params)
+	public where(expr::pair,...)		=> .where(params)
+	public where(p::staticarray)		=> {
+
+		with item in #p do {
+			if(#item->isanyof(::pair,::keyword)) => {	
+				.'where'->insert(
+					.encode(pair(#item->name,#item->value))
+				)
+			else(#item->isa(::string) && #item)
+				.'where'->insert(
+					#item
+				)
+			}
+		}		
+		return .invokeifblock => givenblock
 	}
+
 	public orderby(columns::string) 	=> .merge(::orderby,params) => givenblock
 	public groupby(columns::string,...) => .merge(::groupby,params) => givenblock
 	public having(expr::string,...)		=> .merge(::having,params) => givenblock
@@ -239,10 +243,10 @@ define select_statement => type {
 
 		with item in params do {
 			#item->isanyof(::pair,::keyword)
-			? #out = #out->merge(::having,#item->name->asstring+' = '+.encode(#item->value))
-			| #out = #out->having(#item)
+			? .merge(::having,#item->name->asstring+' = '+.encode(#item->value))
+			| .having(#item)
 		}
-		return #out->invokeifblock => givenblock
+		return .invokeifblock => givenblock
 	}
 	
 	public limit(expr::string) 					=> .switch(::limit,array(#expr)) => givenblock
@@ -589,20 +593,21 @@ define update_statement => type {
 	}
 	
 	public join(table::string,...) 		=> .merge(::join,params) => givenblock
-	public where(expr::string,...)		=> .merge(::where,params) => givenblock
-	public where(expr::pair,...)		=> {
+	public where(expr::string,...)		=> .where(params) => givenblock
+	public where(expr::pair,...)		=> .where(params) => givenblock
+
+	public where(p::staticarray)		=> {
+
 		with item in params do {
-			#item->isanyof(::pair,::keyword)
-			? .where(.encode(#item))
-			| .where(#item)
+			if(#item->isanyof(::pair,::keyword)) => {
+				.'where'->insert(.encode(#item))
+			else(#item->isa(::string) && #item)
+				.'where'->insert(#item)
+			}
 		}		
+		
 		return .invokeifblock => givenblock
-	}
-	public where(p::trait_foreach)		=> {
-		with item in delve(#p) do {
-			.where(.encode(#item))
-		}		
-		return .invokeifblock => givenblock
+
 	}
 
 //---------------------------------------------------------------------------------------
