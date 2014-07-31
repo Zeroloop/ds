@@ -599,7 +599,7 @@ define update_statement => type {
 
 	public where(p::staticarray)		=> {
 
-		with item in params do {
+		with item in #p do {
 			if(#item->isanyof(::pair,::keyword)) => {
 				.'where'->insert(.encode(#item))
 			else(#item->isa(::string) && #item)
