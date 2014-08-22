@@ -32,6 +32,8 @@ define activerow => type {
 
 	public oncreate => {}
 
+	public oncreate(p::void) => {}
+
 	public oncreate(row::ds_row) => {
 		.row = #row
 		return self
