@@ -72,9 +72,18 @@ define activerow => type {
 		}
 	}
 
+	// getrow should be perhaps renamed here
+
 	public getrow(key::pair,...) => {
 		.row = .ds->getrow(:params)
 		.updatedata(:params)
+		return self
+	}
+
+	public getrow(keyvalues::staticarray) => {
+			.row = .ds->getrow(:#keyvalues)
+			.updatedata(:#keyvalues)		
+		}
 	}
 
 	public getrow(keyvalue::string) => {
@@ -82,6 +91,7 @@ define activerow => type {
 			.row = .ds->getrow(#keyvalue)
 			.updatedata(.keycolumn = #keyvalue)
 		}
+		return self
 	}
 
 	public getrow(keyvalue::integer) => {
@@ -89,8 +99,11 @@ define activerow => type {
 			.row = .ds->getrow(#keyvalue)
 			.updatedata(.keycolumn = #keyvalue)
 		}
+		return self
 	}
 
+	// support blindly relayed params
+	public getrow(key::void) => {}
 	
 //---------------------------------------------------------------------------------------
 //
