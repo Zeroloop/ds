@@ -81,9 +81,8 @@ define activerow => type {
 	}
 
 	public getrow(keyvalues::staticarray) => {
-			.row = .ds->getrow(:#keyvalues)
-			.updatedata(:#keyvalues)		
-		}
+		.row = .ds->getrow(:#keyvalues)
+		.updatedata(:#keyvalues)		
 	}
 
 	public getrow(keyvalue::string) => {
