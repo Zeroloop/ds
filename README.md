@@ -48,9 +48,9 @@ Active statements allow you to construct, modify and reuse SQL statements in an 
 
 The degree of improvements depend on a number of factors; the number of columns and rows you work with through to the general response time of the data source. 
 
-![a](https://docs.google.com/document/d/1GLMIZE3R3BFm6hki-eHahU5C6gyFsNiBjwiJHrpIOjI/pubimage?id=1GLMIZE3R3BFm6hki-eHahU5C6gyFsNiBjwiJHrpIOjI&image_id=1C2Pyrcag3JEPmgWtDyfZQWDH5zfkpmW_9QHZ1g)
+![a](https://lh3.googleusercontent.com/l4z-gzb-y7BVoHYXHuXaemGw8GvNCXkTueFdPcOeM5f1y_mYmd9rhs5ficW9-R3ffIN0iskOnmCCJkfOO9-onmMeTdzcTiOBOP7ebc9J9u_Ql4v77l8UFVU9aL0shSoHCg)
 
-![b](https://docs.google.com/document/d/1GLMIZE3R3BFm6hki-eHahU5C6gyFsNiBjwiJHrpIOjI/pubimage?id=1GLMIZE3R3BFm6hki-eHahU5C6gyFsNiBjwiJHrpIOjI&image_id=1GaoxgedmEmehK9mrd2HF_mOG9hwqHnN4RQpCOg)
+![b](https://lh5.googleusercontent.com/bm0GaUUFEK9Eb6oIAd1TQ6icZttacOJtvlNkkW-U5r_FyF9sR6NdJPKt30K2WRK0ixIjaAY1v6_oRsBmnsm1UC-GE1jZvBwvJAX7s57tQrXk9nlWuXHjkYLcYrR-uW4hFw)
 
 ## Installation
 
