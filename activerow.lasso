@@ -37,39 +37,60 @@ define activerow => type {
 		return self
 	}
 
-	public oncreate(ds::ds) => {
-		.ds = #ds
-	}
-	
 	public oncreate(keyvalue::string) => {
-		.row = .ds->getrow(#keyvalue)
-		.updatedata(.keycolumn = #keyvalue)
+		.getrow(#keyvalue)
 		return self
 	}
 
 	public oncreate(keyvalue::integer) => {
-		.row = .ds->getrow(#keyvalue) 
-		.updatedata(.keycolumn = #keyvalue)
+		.getrow(#keyvalue)
 		return self
 	}
 
 	public oncreate(key::pair,...) => {
-		.row = .ds->getrow(:params)
-		.updatedata(:params)
+		.getrow(:params)
 		return self
 	}
 
-	public oncreate(databasetable::tag) => {
+	public oncreate(ds::ds,...keyvalues) => {
+		.ds = #ds
+		#keyvalues ? .getrow(:#keyvalues)
+		return self
+	}
+
+	public oncreate(databasetable::tag,...keyvalues) => {
 		local(s) = #databasetable->asstring->splitextension('.')
 
 		if(#s->value) => {
 			// Set a new ds connection
 			.ds = ds(#databasetable)
+			#keyvalues ? .getrow(:#keyvalues)
+			return self
 		else
 			// Force a ::database.table signature
 			fail(-1,'Table not specified, format is active_row(::database.table)')
 		}
 	}
+
+	public getrow(key::pair,...) => {
+		.row = .ds->getrow(:params)
+		.updatedata(:params)
+	}
+
+	public getrow(keyvalue::string) => {
+		if(#keyvalue) => {
+			.row = .ds->getrow(#keyvalue)
+			.updatedata(.keycolumn = #keyvalue)
+		}
+	}
+
+	public getrow(keyvalue::integer) => {
+		if(#keyvalue) => {
+			.row = .ds->getrow(#keyvalue)
+			.updatedata(.keycolumn = #keyvalue)
+		}
+	}
+
 	
 //---------------------------------------------------------------------------------------
 //
