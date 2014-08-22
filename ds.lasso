@@ -800,22 +800,22 @@ define ds => type{
 			dsinfo = dsinfo
 		)
 
-		#dsinfo->databasename		= #d->databasename
-		#dsinfo->tablename			= #d->tablename
-		#dsinfo->maxrows 			= #d->maxrows
+		#dsinfo->databasename = #d->databasename
+		#dsinfo->tablename    = #d->tablename
+		#dsinfo->maxrows      = #d->maxrows
 
-		#dsinfo->hostdatasource 	= #d->hostdatasource
-		#dsinfo->hostid 			= #d->hostid
-		#dsinfo->hostname 			= #d->hostname
-		#dsinfo->hostport 			= #d->hostport
-		#dsinfo->hostusername 		= #d->hostusername
-		#dsinfo->hostpassword 		= #d->hostpassword
-		#dsinfo->hosttableencoding 	= #d->hosttableencoding
-		#dsinfo->hostschema 		= #d->hostschema
+		#dsinfo->hostdatasource    = #d->hostdatasource
+		#dsinfo->hostid            = #d->hostid
+		#dsinfo->hostname          = #d->hostname
+		#dsinfo->hostport          = #d->hostport
+		#dsinfo->hostusername      = #d->hostusername
+		#dsinfo->hostpassword      = #d->hostpassword
+		#dsinfo->hosttableencoding = #d->hosttableencoding
+		#dsinfo->hostschema        = #d->hostschema
 
-		#dsinfo->connection 		= #d->connection
-		#dsinfo->prepared 			= #d->prepared
-		#dsinfo->refobj 			= #d->refobj
+		#dsinfo->connection = #d->connection
+		#dsinfo->prepared   = #d->prepared
+		#dsinfo->refobj     = #d->refobj
 		
 		//	Determine action
 		match(#action) => {
@@ -852,10 +852,10 @@ define ds => type{
 //
 //---------------------------------------------------------------------------------------
 
-	public addrow(p::pair,...) => .execute(::add,.table,staticarray,params,true) => givenblock
+	public addrow(p::pair,...)           => .execute(::add,.table,staticarray,params,true) => givenblock
 	public addrow(p::trait_keyedforeach) => .execute(::add,.table,staticarray,#p->eachpair->asstaticarray,true) => givenblock
-	public addrow(p::trait_foreach) => .execute(::add,.table,staticarray,#p->asstaticarray,true) => givenblock
-	public addrow(data::staticarray) => .execute(::add,.table,staticarray,#data,true) => givenblock
+	public addrow(p::trait_foreach)      => .execute(::add,.table,staticarray,#p->asstaticarray,true) => givenblock
+	public addrow(data::staticarray)     => .execute(::add,.table,staticarray,#data,true) => givenblock
 
 	public addrow(totable::string,data::trait_keyedforeach) => .execute(::add,
 		#totable,
@@ -895,14 +895,14 @@ define ds => type{
 		#data->eachpair->asstaticarray
 	) => givenblock
 
-	public updaterow(totable::string, data::trait_positionallykeyed, key::any) => .execute(::update, 
-		#totable, 
+	public updaterow(table::string, data::trait_positionallykeyed, key::any) => .execute(::update, 
+		#table, 
 		.keyvalues(#key), 
 		#data
 	) => givenblock
  
- 	public updaterow(totable::tag, data::trait_positionallykeyed, key::any) => .execute(::update, 
- 		#totable->asstring, 
+ 	public updaterow(table::tag, data::trait_positionallykeyed, key::any) => .execute(::update, 
+ 		#table->asstring, 
  		.keyvalues(#key), 
  		#data
  	) => givenblock
@@ -919,7 +919,7 @@ define ds => type{
 		#data->eachpair->asstaticarray
 	) => givenblock
 
- 
+	public updaterows(...) => .updaterow(: #rest || staticarray) 
 
 //---------------------------------------------------------------------------------------
 //
@@ -929,13 +929,13 @@ define ds => type{
 
 	public delete(row::ds_row) => .execute(::delete,#row->table,#row->keyvalues,staticarray) => givenblock
 
-	public deleterow(keyvalue::integer)	=> .execute(::delete,.table,.keyvalues(.keycolumn=#keyvalue),staticarray) => givenblock
-	public deleterow(keyvalue::string)	=> .execute(::delete,.table,.keyvalues(.keycolumn=#keyvalue),staticarray) => givenblock
-	public deleterow(keyvalue::pair)	=> .execute(::delete,.table,.keyvalues(#keyvalue),staticarray) => givenblock
+	public deleterow(keyvalue::integer) => .execute(::delete,.table,.keyvalues(.keycolumn=#keyvalue),staticarray) => givenblock
+	public deleterow(keyvalue::string)  => .execute(::delete,.table,.keyvalues(.keycolumn=#keyvalue),staticarray) => givenblock
+	public deleterow(keyvalue::pair)    => .execute(::delete,.table,.keyvalues(#keyvalue),staticarray) => givenblock
 
-	public deleterow(fromtable::string,keyvalue::integer) => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue)) => givenblock
-	public deleterow(fromtable::string,keyvalue::string) => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue)) => givenblock
-	public deleterow(fromtable::string,key::pair) => .execute(::delete,#fromtable,.keyvalues(#key)) => givenblock
+	public deleterow(fromtable::string,keyvalue::integer)      => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue)) => givenblock
+	public deleterow(fromtable::string,keyvalue::string)       => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue)) => givenblock
+	public deleterow(fromtable::string,key::pair)              => .execute(::delete,#fromtable,.keyvalues(#key)) => givenblock
 	public deleterow(fromtable::string,keyvalues::staticarray) => .execute(::delete,#fromtable,#keyvalues) => givenblock
 
 //---------------------------------------------------------------------------------------
@@ -946,8 +946,8 @@ define ds => type{
 
 	public blankrow => ds_row(map,staticarray,staticarray,.dsinfo)
 
-	public getrow(keyvalue::integer) => .getrow(.keycolumn = #keyvalue)
-	public getrow(keyvalue::string) => .getrow(.keycolumn = #keyvalue)
+	public getrow(keyvalue::integer)  => .getrow(.keycolumn = #keyvalue)
+	public getrow(keyvalue::string)   => .getrow(.keycolumn = #keyvalue)
 	public getrow(keyvalue::pair,...) => .execute(::search,
 		.table,
 		staticarray,
@@ -959,10 +959,10 @@ define ds => type{
 	public getrows(keyvalue::pair,p::pair,...) 	=> .getfrom(.table,params)
 	public getrows(keyvalues::trait_foreach) 	=> .getfrom(.table,#keyvalues)
 
-	public getfrom(table::tag,keyvalue::any) 	=> .getfrom(#table->asstring,#keyvalue)
-	public getfrom(table::string,keyvalue::string) 	=> .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
+	public getfrom(table::tag,keyvalue::any)        => .getfrom(#table->asstring,#keyvalue)
+	public getfrom(table::string,keyvalue::string)  => .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
 	public getfrom(table::string,keyvalue::integer) => .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
-	public getfrom(table::string,key::pair) 		=> .execute(::search,#table,.keyvalues(#key),staticarray)->rows
+	public getfrom(table::string,key::pair)         => .execute(::search,#table,.keyvalues(#key),staticarray)->rows
 
 	public getfrom(table::string,keyvalues::trait_foreach) 	=> {		
 		local(
@@ -1033,8 +1033,8 @@ define ds => type{
 	public lastrow(col::string) => .last->rows->last->find(#col)
 	public lastrow(col::tag) 	=> .last->rows->last->find(#col->asstring)
 
-	public rows 					=> (.first->rows 		=> givenblock) || staticarray
-	public rows(type::tag)			=> (.first->rows(#type) => givenblock) || staticarray
+	public rows                        => (.first->rows 		=> givenblock) || staticarray
+	public rows(type::tag)             => (.first->rows(#type) => givenblock) || staticarray
 	public rows(creator::memberstream) => (.first->rows(#creator) => givenblock) || staticarray
 	
 //---------------------------------------------------------------------------------------
