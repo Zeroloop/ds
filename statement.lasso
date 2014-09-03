@@ -352,6 +352,7 @@ define insert_statement => type {
 	data
 		public
 			into::array 	= array, // table
+			ignore::boolean = false, 
 			columns::array 	= array,
 			values::array 	= array,
 			update::array 	= array,
@@ -390,7 +391,7 @@ define insert_statement => type {
 		return .invokeifblock => givenblock
 	}
 
-	public into			=> .ifsize(.'into',			'INSERT INTO ',	',')
+	public into			=> .ifsize(.'into',			'INSERT '+(.ignore ? 'IGNORE ') + 'INTO ',	',')
 	public columns		=> .ifsize(.'columns',		'(', ',', ')')
 	public values		=> .ifsize(.'values',		'VALUES ',',\n')
 	public onduplicate	=> .ifsize(.'onduplicate',	'ON DUPLICATE KEY UPDATE ',',\n')
@@ -491,9 +492,21 @@ define insert_statement => type {
 
 //---------------------------------------------------------------------------------------
 //
+// 	Ignore support
+//
+//---------------------------------------------------------------------------------------
+
+	public ignore(shouldignore::boolean) => {
+		.ignore = #shouldignore
+		return .invokeifblock => givenblock
+	}
+
+//---------------------------------------------------------------------------------------
+//
 // 	On duplicate key, MySQL only
 //
 //---------------------------------------------------------------------------------------
+
 
 	public onduplicate(keyupdateall::boolean) => {
 		local(on) = .'onduplicate'
