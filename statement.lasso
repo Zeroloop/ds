@@ -352,6 +352,7 @@ define insert_statement => type {
 	data
 		public
 			into::array 	= array, // table
+		public 
 			ignore::boolean = false, 
 			columns::array 	= array,
 			values::array 	= array,
@@ -391,7 +392,7 @@ define insert_statement => type {
 		return .invokeifblock => givenblock
 	}
 
-	public into			=> .ifsize(.'into',			'INSERT '+(.ignore ? 'IGNORE ') + 'INTO ',	',')
+	public into			=> .ifsize(.'into',			'INSERT'+ (.ignore ? ' IGNORE ') + ' INTO ',	',')
 	public columns		=> .ifsize(.'columns',		'(', ',', ')')
 	public values		=> .ifsize(.'values',		'VALUES ',',\n')
 	public onduplicate	=> .ifsize(.'onduplicate',	'ON DUPLICATE KEY UPDATE ',',\n')
