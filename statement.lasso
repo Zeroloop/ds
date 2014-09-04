@@ -428,15 +428,19 @@ define insert_statement => type {
 
 	public addrow(p::map) => {
 		local(r) = array
+
+		// If no columns specified use the maps keys
+		.'columns'->size == 0
+		? with col in #p->keys do {
+			.'columns'->insert(#col)
+		}
+
+		// Only use data from specified columns
 		with col in .'columns' do {
 			#r->insert(#p->find(#col))
 		}
 		return .addrow(#r) => givenblock
 	}
-
-
-
-
 
 
 //---------------------------------------------------------------------------------------
