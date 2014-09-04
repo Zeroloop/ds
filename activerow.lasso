@@ -332,6 +332,10 @@ define activerow => type {
 	public find=(val,col::tag) 		=> { .row->find(#col->asstring) = #val }
 	public find=(val,col::string) 	=> { .row->find(#col) = #val }
 
+	//	Unmodified values
+	public raw(col::string) => .row->raw(#col)
+	public raw(col::tag) => .row->raw(#col->asstring)
+
 //---------------------------------------------------------------------------------------
 //
 // 	Retun self as map or array (includes modified data)
