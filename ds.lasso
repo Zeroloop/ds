@@ -472,15 +472,17 @@ define ds => type{
 
 	}
 
-	public close => {
-		.dsinfo->action = lcapi_datasourcetickle
-		.'capi'->invoke(.dsinfo)
+	public close(dsinfo::dsinfo = .dsinfo) => {
+		#dsinfo->action = lcapi_datasourcetickle
+		.'capi'->invoke(#dsinfo)
 
-		.dsinfo->action = lcapi_datasourceCloseConnection
-		.'capi'->invoke(.dsinfo)
+		#dsinfo->action = lcapi_datasourceCloseConnection
+		.'capi'->invoke(#dsinfo)
+
+		#dsinfo->connection = 0
 
 		// This is needed for thread support
-		.dsinfo = .dsinfo->makeinheritedcopy
+		.dsinfo = #dsinfo->makeinheritedcopy
 	}
 	
 	public notyet => {
@@ -498,7 +500,7 @@ define ds => type{
 	public invoke(dsinfo::dsinfo = .'dsinfo') => {
 	
 		//	Close connection when not web_request not ideal, but safe.
-		not web_request ? handle => {.close}
+		not web_request ? handle => {.close(#dsinfo)}
 		
 		//	Remove old results
 		.removeall
@@ -835,12 +837,11 @@ define ds => type{
 		#dsinfo->inputcolumns 	= .inputcolumns(#values)
 
 		handle => {
-			if(!#d->connection) => {
+			if(!#d->connection && #dsinfo->connection) => {
 				#d->connection 	= #dsinfo->connection
 				#d->prepared 	= #dsinfo->prepared
 				#d->refobj 		= #dsinfo->refobj			
 			}
-
 			#d->statement = #dsinfo->statement 
 		}
 
