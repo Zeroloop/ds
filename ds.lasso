@@ -832,7 +832,8 @@ define ds => type{
 		#dsinfo->inputcolumns 	= .inputcolumns(#values)
 
 		handle => {
-			if(!#d->connection) => {
+			if(!#d->connection && #dsinfo->connection) => {
+
 				#d->connection 	= #dsinfo->connection
 				#d->prepared 	= #dsinfo->prepared
 				#d->refobj 		= #dsinfo->refobj			
