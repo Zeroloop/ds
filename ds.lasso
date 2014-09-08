@@ -478,6 +478,9 @@ define ds => type{
 
 		.dsinfo->action = lcapi_datasourceCloseConnection
 		.'capi'->invoke(.dsinfo)
+
+		// This is needed for thread support
+		.dsinfo = .dsinfo->makeinheritedcopy
 	}
 	
 	public notyet => {
