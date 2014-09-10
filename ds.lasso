@@ -734,8 +734,13 @@ define ds => type{
 		return #input->asstaticarray			
 	}	
 
-	private filterinput(p::any) => #p
-	private filterinput(p::date) => #p->asstring 
+	private filterinput(p::integer) => #p
+	private filterinput(p::decimal) => #p
+	private filterinput(p::string)  => #p
+	private filterinput(p::bytes)   => #p
+	private filterinput(p::null)    => #p
+	private filterinput(p::void)    => null
+	private filterinput(p::any)     => #p->asstring 
 
 //---------------------------------------------------------------------------------------
 //
