@@ -360,14 +360,14 @@ define insert_statement => type {
 		public
 			into::array 	= array, // table
 		public 
-			ignore::boolean = false, 
+			ignore::boolean  = false, 
 			delayed::boolean = false, 
-			columns::array 	= array,
-			values::array 	= array,
-			update::array 	= array,
-			onduplicate		= array,
+			columns::array   = array,
+			values::array    = array,
+			update::array    = array,
+			onduplicate      = array,
 		public
-			insertevery			= 0		
+			insertevery = 0		
 
 	public oncreate => {}
 	
