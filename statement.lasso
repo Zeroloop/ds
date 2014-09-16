@@ -361,6 +361,7 @@ define insert_statement => type {
 			into::array 	= array, // table
 		public 
 			ignore::boolean  = false, 
+		public 
 			delayed::boolean = false, 
 			columns::array   = array,
 			values::array    = array,
