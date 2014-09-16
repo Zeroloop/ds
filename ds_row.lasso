@@ -250,4 +250,8 @@ define ds_row => type{
 // map->forEachNode should be public in 9.2.7
 protect => {\map}
 define map->forEachNode2 => .forEachNode => givenBlock
+
+define json_serialize(p::ds_row) => json_serialize(#p->asmap)
+
+
 ?>

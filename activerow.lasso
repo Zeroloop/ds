@@ -347,4 +347,7 @@ define activerow => type {
 
 }
 
+define json_serialize(p::activerow) => json_serialize(#p->asmap)
+
+
 ?>
