@@ -361,6 +361,7 @@ define insert_statement => type {
 			into::array 	= array, // table
 		public 
 			ignore::boolean = false, 
+			delay::boolean = false, 
 			columns::array 	= array,
 			values::array 	= array,
 			update::array 	= array,
@@ -399,7 +400,7 @@ define insert_statement => type {
 		return .invokeifblock => givenblock
 	}
 
-	public into			=> .ifsize(.'into',			'INSERT'+ (.ignore ? ' IGNORE ') + ' INTO ',	',')
+	public into			=> .ifsize(.'into',			'INSERT' + (.ignore ? ' IGNORE ') + (.ignore ? ' DELAYED ') + ' INTO ',	',')
 	public columns		=> .ifsize(.'columns',		'(', ',', ')')
 	public values		=> .ifsize(.'values',		'VALUES ',',\n')
 	public onduplicate	=> .ifsize(.'onduplicate',	'ON DUPLICATE KEY UPDATE ',',\n')
@@ -510,6 +511,17 @@ define insert_statement => type {
 
 	public ignore(shouldignore::boolean) => {
 		.ignore = #shouldignore
+		return .invokeifblock => givenblock
+	}
+
+//---------------------------------------------------------------------------------------
+//
+// 	Ignore support
+//
+//---------------------------------------------------------------------------------------
+
+	public delayed(shoulddelay::boolean) => {
+		.delayed = #shoulddelay
 		return .invokeifblock => givenblock
 	}
 
