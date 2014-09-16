@@ -401,7 +401,7 @@ define insert_statement => type {
 		return .invokeifblock => givenblock
 	}
 
-	public into			=> .ifsize(.'into',			'INSERT' + (.ignore ? ' IGNORE ') + (.delayed ? ' DELAYED ') + ' INTO ',	',')
+	public into			=> .ifsize(.'into',			'INSERT'  + (.delayed ? ' DELAYED ') + (.ignore ? ' IGNORE ') + ' INTO ',	',')
 	public columns		=> .ifsize(.'columns',		'(', ',', ')')
 	public values		=> .ifsize(.'values',		'VALUES ',',\n')
 	public onduplicate	=> .ifsize(.'onduplicate',	'ON DUPLICATE KEY UPDATE ',',\n')
