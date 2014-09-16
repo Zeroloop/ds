@@ -213,6 +213,13 @@ define select_statement => type {
 		| return .invokeifblock => givenblock
 	}
 
+	public groupby(reset::boolean) => {
+		! #reset
+		? return .switch(::limit,array) => givenblock 
+		| return .invokeifblock => givenblock
+	}
+
+
 	public from(table::tag,...) 		=> .switch(::from,params->asarray) => givenblock
 	public from(table::string,...) 		=> .switch(::from,params->asarray) => givenblock
 
