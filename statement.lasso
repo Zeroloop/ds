@@ -258,7 +258,7 @@ define select_statement => type {
 	
 	public limit(expr::string) 					=> .switch(::limit,array(#expr)) => givenblock
 	public limit(max::integer) 					=> .switch(::limit,array('0,'+#max)) => givenblock
-	public limit(start::integer,max::integer) 	=> .switch(::limit,array('0,'+#max)) => givenblock
+	public limit(start::integer,max::integer) 	=> .switch(::limit,array(#start + ','+#max)) => givenblock
 
 //---------------------------------------------------------------------------------------
 //
