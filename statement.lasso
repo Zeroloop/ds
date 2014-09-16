@@ -465,7 +465,7 @@ define insert_statement => type {
 		with v in #p do {
 			#r->insert(.encode(#v))		
 		}
-		
+		 
 		.'values'->insert('('+#r->join(',')+')')
 		
 		if(.'ds' && .'insertevery' && .'values'->size >= .'insertevery' && !givenblock) => {
