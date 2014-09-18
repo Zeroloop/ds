@@ -408,7 +408,6 @@ define ds => type{
 	}
 
 	private store => {
-		stdoutnl('store: '+.key)
 		ds_connections->insert(.key = self)
 	}
 
@@ -425,8 +424,6 @@ define ds => type{
 			active = ds_connections->find(.key),
 			d
 		)
-
-		stdoutnl(.key + ' active' = #active ? 'Yes' | 'No')
 
 		if(#active) => { 
 			#d = #active->dsinfo
