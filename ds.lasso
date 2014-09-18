@@ -17,9 +17,9 @@ define ds_connections => {
 
 		web_request ? define_atend({
 			ds_connections->foreach => {				
-			//	stdout(#1->key+': ')
+				//stdout(#1->key+': ')
 				#1->close
-			//	stdoutnl('closed')	
+				//stdoutnl('closed')	
 			}
 		})
 	} 
@@ -71,8 +71,8 @@ define ds => type{
 		local(ds) = ds
 		
 		#ds->dsinfo = .dsinfo->makeinheritedcopy
-		#ds->key = .key
-		#ds->capi = .capi
+		#ds->key    = .key
+		#ds->capi   = .capi
 		
 		return #ds
 	
@@ -239,8 +239,10 @@ define ds => type{
 		}
 		
 		if(.primed) => { 
+			
 			// Reusing details + connection (if active)
 			#store = false 
+
 		else(#host)			
 			//	Host specified, skip look up — fast
 			#dsinfo->hostdatasource 	= #datasource
@@ -275,6 +277,8 @@ define ds => type{
 			#dsinfo->hosttableencoding 	= #hostinfo->get(8)||#encoding	
 
 			.'capi' = \#datasource
+		else 
+			#store = false 
 		}
 
 		//	Replace database and table (most likely the same unless key)
@@ -404,7 +408,8 @@ define ds => type{
 	}
 
 	private store => {
-		ds_connections->insert(.'key' = self)
+		stdoutnl('store: '+.key)
+		ds_connections->insert(.key = self)
 	}
 
 	// Load Connection
@@ -420,6 +425,8 @@ define ds => type{
 			active = ds_connections->find(.key),
 			d
 		)
+
+		stdoutnl(.key + ' active' = #active ? 'Yes' | 'No')
 
 		if(#active) => { 
 			#d = #active->dsinfo
@@ -473,16 +480,19 @@ define ds => type{
 	}
 
 	public close(dsinfo::dsinfo = .dsinfo) => {
-		#dsinfo->action = lcapi_datasourcetickle
-		.'capi'->invoke(#dsinfo)
+		if(#dsinfo->connection) => {
 
-		#dsinfo->action = lcapi_datasourceCloseConnection
-		.'capi'->invoke(#dsinfo)
+			#dsinfo->action = lcapi_datasourcetickle
+			.'capi'->invoke(#dsinfo)
 
-		#dsinfo->connection = 0
+			#dsinfo->action = lcapi_datasourceCloseConnection
+			.'capi'->invoke(#dsinfo)
 
-		// This is needed for thread support
-		.dsinfo = #dsinfo->makeinheritedcopy
+			#dsinfo->connection = 0
+
+			// This is needed for thread support
+			.dsinfo = #dsinfo->makeinheritedcopy			
+		}
 	}
 	
 	public notyet => {
