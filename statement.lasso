@@ -96,7 +96,7 @@ define statement => type {
 				return 'NULL'
 			case(::void)
 				return 'NULL'
-			case(::array)
+			case(::array,staticarray)
 				local(out) = ''
 				#out->append('IN(')
 				#val->foreach => {
