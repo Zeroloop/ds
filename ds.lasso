@@ -971,9 +971,9 @@ define ds => type{
 		true 
 	)
 
-	public getrows(keyvalue) 					=> .getfrom(.table,params)
-	public getrows(keyvalue::pair,p::pair,...) 	=> .getfrom(.table,params)
-	public getrows(keyvalues::trait_foreach) 	=> .getfrom(.table,#keyvalues)
+	public getrows(keyvalue,...)               => .getfrom(.table,params)
+	public getrows(keyvalue::pair,p::pair,...) => .getfrom(.table,params)
+	public getrows(keyvalues::trait_foreach)   => .getfrom(.table,#keyvalues)
 
 	public getfrom(table::tag,keyvalue::any)        => .getfrom(#table->asstring,#keyvalue)
 	public getfrom(table::string,keyvalue::string)  => .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
