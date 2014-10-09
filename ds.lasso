@@ -1077,7 +1077,8 @@ define ds => type{
 	public update(table::tag,where::trait_foreach)    => .update_statement->update(#table,#where) => givenblock
 	public update(table::string,where::trait_foreach) => .update_statement->update(#table,#where) => givenblock
 
-	public update(...)                    => .update_statement->set(:#rest || staticarray) => givenblock
+	public update(...) => .update_statement->set(:#rest || staticarray) => givenblock
+	public set(...)    => .update_statement->set(:#rest || staticarray) => givenblock
 
 	public insertinto(table::string,row::map,update::boolean=false)	=> .insert_statement->into(#table)
 																			->columns(#row->keys)
