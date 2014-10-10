@@ -794,8 +794,6 @@ define ds => type{
 		return self
 	}
 
-	public max             => .maxrows
-	public max(p::integer) => .maxrows(#p)
 	public all             => .maxrows(-1)
 
 	public affected => .'results'->size ? .'results'->last->affected | 0
