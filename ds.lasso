@@ -794,6 +794,10 @@ define ds => type{
 		return self
 	}
 
+	public max             => .maxrows
+	public max(p::integer) => .maxrows(#p)
+	public all             => .maxrows(-1)
+
 	public affected => .'results'->size ? .'results'->last->affected | 0
 	public found	=> .'results'->size ? .'results'->last->found | 0
 	
@@ -1021,15 +1025,15 @@ define ds => type{
 		return #r
 	}
 
-	public all(maxrows::integer=-1) => {
+	public findrows(...) => .search(:#rest || staticarray)->rows
+
+	public findall(maxrows::integer=-1) => {
 		.dsinfo->maxrows = #maxrows
 		.dsinfo->action = lcapi_datasourcefindall
 		return .invoke => givenblock		
 	}
 
-	public findrows(...) => .search(:#rest || staticarray)->rows
-
-	public allrows(maxrows::integer=-1) => .all(#maxrows)->rows
+	public allrows(maxrows::integer=-1) => .findall(#maxrows)->rows
 
 
 //---------------------------------------------------------------------------------------
