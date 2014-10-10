@@ -21,7 +21,7 @@ define ds_connections => {
 				#1->close
 				//stdoutnl('closed')	
 			}
-		})
+		}) 
 	} 
 	return $__ds__connections__
 }
