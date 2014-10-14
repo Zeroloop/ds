@@ -951,10 +951,10 @@ define ds => type{
 	public deleterow(keyvalue::string)  => .execute(::delete,.table,.keyvalues(.keycolumn=#keyvalue),staticarray) => givenblock
 	public deleterow(keyvalue::pair)    => .execute(::delete,.table,.keyvalues(#keyvalue),staticarray) => givenblock
 
-	public deleterow(fromtable::string,keyvalue::integer)      => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue)) => givenblock
-	public deleterow(fromtable::string,keyvalue::string)       => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue)) => givenblock
-	public deleterow(fromtable::string,key::pair,...)          => .execute(::delete,#fromtable,.keyvalues(tie((:#key), #rest || staticarray)->asstaticarray)) => givenblock
-	public deleterow(fromtable::string,keyvalues::staticarray) => .execute(::delete,#fromtable,#keyvalues) => givenblock
+	public deleterow(fromtable::string,keyvalue::integer)      => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue),staticarray) => givenblock
+	public deleterow(fromtable::string,keyvalue::string)       => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue),staticarray) => givenblock
+	public deleterow(fromtable::string,key::pair,...)          => .execute(::delete,#fromtable,.keyvalues(tie((:#key), #rest || staticarray)->asstaticarray),staticarray) => givenblock
+	public deleterow(fromtable::string,keyvalues::staticarray) => .execute(::delete,#fromtable,#keyvalues,staticarray) => givenblock
 
 	public deleterow(fromtable::tag,keyvalue::integer)      => .deleterow(#fromtable->asstring,#keyvalue) => givenblock
 	public deleterow(fromtable::tag,keyvalue::string)       => .deleterow(#fromtable->asstring,#keyvalue) => givenblock
