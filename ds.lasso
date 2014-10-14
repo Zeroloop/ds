@@ -953,8 +953,13 @@ define ds => type{
 
 	public deleterow(fromtable::string,keyvalue::integer)      => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue)) => givenblock
 	public deleterow(fromtable::string,keyvalue::string)       => .execute(::delete,#fromtable,.keyvalues(.keycolumn=#keyvalue)) => givenblock
-	public deleterow(fromtable::string,key::pair)              => .execute(::delete,#fromtable,.keyvalues(#key)) => givenblock
+	public deleterow(fromtable::string,key::pair,...)          => .execute(::delete,#fromtable,.keyvalues(tie((:#key), #rest || staticarray)->asstaticarray)) => givenblock
 	public deleterow(fromtable::string,keyvalues::staticarray) => .execute(::delete,#fromtable,#keyvalues) => givenblock
+
+	public deleterow(fromtable::tag,keyvalue::integer)      => .deleterow(#fromtable->asstring,#keyvalue) => givenblock
+	public deleterow(fromtable::tag,keyvalue::string)       => .deleterow(#fromtable->asstring,#keyvalue) => givenblock
+	public deleterow(fromtable::tag,key::pair,...)          => .deleterow(#fromtable->asstring,tie((:#key), #rest || staticarray)->asstaticarray) => givenblock
+	public deleterow(fromtable::tag,keyvalues::staticarray) => .deleterow(#fromtable->asstring,#keyvalues) => givenblock
 
 //---------------------------------------------------------------------------------------
 //
