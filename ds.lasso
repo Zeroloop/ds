@@ -1059,6 +1059,14 @@ define ds => type{
 	public rows                        => (.first->rows 		=> givenblock) || staticarray
 	public rows(type::tag)             => (.first->rows(#type) => givenblock) || staticarray
 	public rows(creator::memberstream) => (.first->rows(#creator) => givenblock) || staticarray
+
+//---------------------------------------------------------------------------------------
+//
+// 	No output as string
+//
+//---------------------------------------------------------------------------------------
+
+	public asstring => ''
 	
 //---------------------------------------------------------------------------------------
 //
