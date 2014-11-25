@@ -300,6 +300,11 @@ define activerow => type {
 //
 //---------------------------------------------------------------------------------------
 
+	public save(data::trait_keyedForEach) => {
+		.updatedata(#data)
+		return .save 
+	}
+
 	public save(pair::pair,...) => {
 		.updatedata(:params)
 		return .save
