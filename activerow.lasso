@@ -112,11 +112,12 @@ define activerow => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public id 		=> .row->keyvalue
+	public id       => .row->keyvalue
 	public keyvalue => .row->keyvalue
-	public created	=> .creation_column		? self(.creation_column)
-	public modified => .modification_column	? self(.modification_column)
-	public columns	=> {
+	public created  => .created_column		? .find(.created_column)
+	public modified => .modified_column		? .find(.modified_column)
+	
+	public columns  => {
 		local(cols) = .row->columns
 		
 		#cols->size ? return #cols
