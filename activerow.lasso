@@ -19,11 +19,11 @@ define activerow => type {
 		public row,
 				
 		// allow support for basic preferences
-		public created_column   = activerow_default_created_column,
-		public modified_column  = activerow_default_modified_column,
-		public timestamp_format = activerow_default_timestamp_format,
-		public timestamp_utc    = false,
-		public generate_uuid    = false
+		public created_column     = activerow_default_created_column,
+		public modified_column    = activerow_default_modified_column,
+		public timestamp_format   = activerow_default_timestamp_format,
+		public timestamp_timezone = '',
+		public generate_uuid      = false
 
 //---------------------------------------------------------------------------------------
 //
@@ -269,7 +269,7 @@ define activerow => type {
 		)
 
 		//	Check if should use UTC
-		.timestamp_utc ? #now->timezone = 'UTC'
+		.timestamp_timezone ? #now->timezone = .timestamp_timezone
 
 		#key = .find(.keycolumn)
 
