@@ -181,7 +181,7 @@ define ds_row => type{
 			local(
 				key   = #1->key,
 				value = #1->value,
-				index = .index->find(#key)
+				index = .index->find(#key->asstring)
 			)
 
 			// Update data if item is there
