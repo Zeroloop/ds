@@ -71,7 +71,7 @@ define table => type {
 		local(i) = 1
 		.foreach => {
 			if(#1) => {
-				 .index->get(#i) = void
+				 .'index'->get(#i) = void
 				 #1->removeall
 			}
 			#i++
