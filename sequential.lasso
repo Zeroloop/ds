@@ -112,7 +112,9 @@ define sequential => type {
 	}
 	
 	public removeall => {
-		.'node' = void
+		.'node'  = void
+		.'first' = void
+		.'last'  = void
 	}
 	
 	public keys => {
