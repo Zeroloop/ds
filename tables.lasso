@@ -69,11 +69,9 @@ define table => type {
 	}
 	public removeall => {
 		local(i) = 1
-		.foreach => {
-			if(#1) => {
-				 .'index'->get(#i) = void
-				 #1->removeall
-			}
+
+		.'index'->foreach => {
+			.'index'->get(#i) = void
 			#i++
 		}
 	}
