@@ -243,6 +243,9 @@ define activerow => type {
 			.modified_column = date->format(.timestamp_format)
 		)
 		
+		// Patch lost rows — normally from ds(::database)->rows
+		! #row->table && .table ? #row->table = .table 
+
 		// Only update when modified (perhaps the above shouldn't be considered)/
 		#row->update
 

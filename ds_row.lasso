@@ -36,7 +36,7 @@ define ds_row => type{
 		local(i) := .'index'->find(.keycolumn)
 		? .'row'->get(#i) = #p
 	}
-	
+
 	public keyvalues => {
 		local(
 			out = array,
@@ -47,6 +47,14 @@ define ds_row => type{
 			#out->insert((:#col,#1->get(2),.raw(#col->asstring)))
 		}
 		return #out->asstaticarray
+	}
+
+	public table=(p::tag) => {
+		.table = #p->asstring
+	}
+	
+	public table=(p::string) => {
+		.'dsinfo'->tablename = #p	
 	}
 
 	public asstring => {
