@@ -103,6 +103,8 @@ define statement => type {
 				return 'NULL'
 			case(::void)
 				return 'NULL'
+			case(::bytes)
+				return '0x' + #val->encodehex
 			case(::array,::staticarray)
 				local(out) = ''
 				#out->append('IN(')
@@ -124,11 +126,12 @@ define statement => type {
 		return #item->name->asstring + #delim + .encode(#item->value)
 	}
 	
-	public encodecol(col::tag) => '`' + #col->asstring + '`'
+	public encodecol(col::tag) => '`' + #col->asstring->replace('.','`.`')& + '`'
 	public encodecol(col::string) => {
 		#col = #col->ascopy
 		#col->replace(';','')
 		#col->replace('`','')
+		#col->replace('.','`.`')
 		return '`' + #col + '`'
 	}
 	
@@ -201,7 +204,7 @@ define select_statement => type {
 
 	public from(tables::array) 			=> .switch(::from,#tables) => givenblock
 	public join(tables::array) 			=> .switch(::join,#tables) => givenblock
-	public where(expr::array)			=> .switch(::where,#expr) => givenblock
+//	public where(expr::array)			=> .switch(::where,#expr) => givenblock
 	public groupby(columns::array) 		=> .switch(::groupby,#columns) => givenblock
 	public having(expr::array)			=> .switch(::having,#expr) => givenblock
 	public orderby(columns::array) 		=> .switch(::orderby,#columns) => givenblock
@@ -230,10 +233,12 @@ define select_statement => type {
 	public from(table::tag,...) 		=> .switch(::from,params->asarray) => givenblock
 	public from(table::string,...) 		=> .switch(::from,params->asarray) => givenblock
 
-	public join(table::string,...) 		=> .merge(::join,params) => givenblock
-	public where(expr::string,...)		=> .where(params)
-	public where(expr::pair,...)		=> .where(params)
-	public where(p::staticarray)		=> {
+	public join(table::string,...) => .merge(::join,params) => givenblock
+
+	public where(expr::string,...) => .where(params) => givenblock
+	public where(expr::pair,...)   => .where(params) => givenblock
+	public where(p::array)         => .where(#p->asstaticarray) => givenblock
+	public where(p::staticarray)   => {
 
 		with item in #p do {
 			if(#item->isanyof(::pair,::keyword)) => {	
@@ -448,7 +453,7 @@ define insert_statement => type {
 		// If no columns specified use the maps keys
 		.'columns'->size == 0
 		? with col in #p->keys do {
-			.'columns'->insert(#col)
+			.'columns'->insert(.encodecol(#col))
 		}
 
 		// Only use data from specified columns
