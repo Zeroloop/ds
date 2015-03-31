@@ -126,13 +126,18 @@ define statement => type {
 		return #item->name->asstring + #delim + .encode(#item->value)
 	}
 	
-	public encodecol(col::tag) => '`' + #col->asstring->replace('.','`.`')& + '`'
+	public encodecol(col::tag) => .encodecol(#col->asstring)
+
 	public encodecol(col::string) => {
 		#col = #col->ascopy
 		#col->replace(';','')
-		#col->replace('`','')
-		#col->replace('.','`.`')
+
+		.ismysql ? #col->replace('`','') & replace('.','`.`')
 		return '`' + #col + '`'
+	}
+
+	public ismysql => protect => {
+		return .'ds'->dsinfo->hostdatasource->asstring >> 'mysql'
 	}
 	
 //---------------------------------------------------------------------------------------
