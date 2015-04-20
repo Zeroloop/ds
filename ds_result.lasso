@@ -31,8 +31,8 @@ define result_pop 				=> thread_var_pop(::__ds_results)
 define ds_result => type {
 	data 
 		public index::trait_searchable,
-		public cols::trait_foreach,
-		public types::trait_foreach,
+		public cols::trait_positionallykeyed,
+		public types::trait_positionallykeyed,
 		public rows::staticarray,
 		public set::staticarray,
 		public found::integer=0,
@@ -116,7 +116,7 @@ define ds_result => type {
 
 	public oncreate(
 		index::trait_searchable,
-		cols::trait_foreach,
+		cols::trait_positionallykeyed,
 		rows::staticarray,
 		set::staticarray,
 		found::integer=0,

@@ -80,7 +80,7 @@ define statement => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public switch(target::tag,value::trait_foreach) => {
+	public switch(target::tag,value::trait_positionallykeyed) => {
 		(.escape_member(tag(`'`+#target->asstring+`'=`)))->invoke(#value)
 		return .invokeifblock => givenblock
 	}
@@ -131,9 +131,9 @@ define statement => type {
 	public encodecol(col::string) => {
 		#col = #col->ascopy
 		#col->replace(';','')
-
-		.ismysql ? #col->replace('`','') & replace('.','`.`')
-		return '`' + #col + '`'
+		
+		.ismysql ? #col = '`' + #col->replace('`','') & replace('.','`.`')& + '`'
+		return #col
 	}
 
 	public ismysql => protect => {
@@ -147,7 +147,7 @@ define statement => type {
 //---------------------------------------------------------------------------------------
 
 	public ifsize(p::null,...) => ''
-	public ifsize(p::trait_foreach,pre::string,join::string='',suf::string='') => {
+	public ifsize(p::trait_positionallykeyed,pre::string,join::string='',suf::string='') => {
 		if(#p->size) => {
 			return #pre + #p->join(#join) + #suf + '\n'
 		else
@@ -166,14 +166,14 @@ define select_statement => type {
 	parent statement
 
 	data
-		public	select::trait_foreach 	= array,
-		public	from::trait_foreach 	= array,
-		public	join::trait_foreach 	= array,
-		public	where::trait_foreach 	= array,
-		public	groupby::trait_foreach 	= array,
-		public	having::trait_foreach 	= array,
-		public	orderby::trait_foreach 	= array,
-		public	limit::trait_foreach 	= array
+		public	select::trait_positionallykeyed 	= array,
+		public	from::trait_positionallykeyed 	= array,
+		public	join::trait_positionallykeyed 	= array,
+		public	where::trait_positionallykeyed 	= array,
+		public	groupby::trait_positionallykeyed 	= array,
+		public	having::trait_positionallykeyed 	= array,
+		public	orderby::trait_positionallykeyed 	= array,
+		public	limit::trait_positionallykeyed 	= array
 
 	public oncreate => {}
 	public oncreate(ds::ds) => {
@@ -397,12 +397,12 @@ define insert_statement => type {
 	
 	public into(table::string,...columns)             => .switch(::into,array(#table))->merge(::columns,#columns || staticarray) => givenblock	
 	public into(table::tag,...columns)                => .switch(::into,array(#table->asstring))->merge(::columns,#columns || staticarray) => givenblock
-	public into(table::string,columns::trait_foreach) => .switch(::into,array(#table))->merge(::columns,#columns->asstaticarray) => givenblock	
-	public into(table::tag,columns::trait_foreach)    => .switch(::into,array(#table->asstring))->merge(::columns,#columns->asstaticarray) => givenblock
+	public into(table::string,columns::trait_positionallykeyed) => .switch(::into,array(#table))->merge(::columns,#columns->asstaticarray) => givenblock	
+	public into(table::tag,columns::trait_positionallykeyed)    => .switch(::into,array(#table->asstring))->merge(::columns,#columns->asstaticarray) => givenblock
 
 	public columns(column::tag,...) 	=> .merge(::columns,params) => givenblock
 	public columns(column::string,...) 	=> .merge(::columns, params) => givenblock
-	public columns(columns::trait_foreach) 		=> .switch(::columns,#columns->asarray) => givenblock
+	public columns(columns::trait_positionallykeyed) 		=> .switch(::columns,#columns->asarray) => givenblock
 	
 	public merge(target::tag,values::staticarray) => {	
 		match(#target) => {
@@ -419,7 +419,16 @@ define insert_statement => type {
 	}
 
 	public into			=> .ifsize(.'into',			'INSERT'  + (.delayed ? ' DELAYED ') + (.ignore ? ' IGNORE ') + ' INTO ',	',')
-	public columns		=> .ifsize(.'columns',		'(', ',', ')')
+
+
+	public columns		=> {
+		return .'columns'->size
+		? '(' + (with col in .'columns'
+					select .encodecol(#col)
+						)->asstaticarray->join(',') + ')'
+		| ''
+	}
+
 	public values		=> .ifsize(.'values',		'VALUES ',',\n')
 	public onduplicate	=> .ifsize(.'onduplicate',	'ON DUPLICATE KEY UPDATE ',',\n')
 
@@ -458,7 +467,7 @@ define insert_statement => type {
 		// If no columns specified use the maps keys
 		.'columns'->size == 0
 		? with col in #p->keys do {
-			.'columns'->insert(.encodecol(#col))
+			.'columns'->insert(#col)
 		}
 
 		// Only use data from specified columns
@@ -503,7 +512,7 @@ define insert_statement => type {
 //
 //---------------------------------------------------------------------------------------
 	
-	public addrows(rows::trait_foreach) => {
+	public addrows(rows::trait_positionallykeyed) => {
 		#rows->foreach => {
 			.addrow(#1)
 		}
@@ -608,10 +617,10 @@ define update_statement => type {
 	parent statement
 
 	data
-		public	update::trait_foreach 	= array,
-		public	join::trait_foreach 	= array,
-		public	set::trait_foreach 		= array,
-		public	where::trait_foreach 	= array 
+		public	update::trait_positionallykeyed 	= array,
+		public	join::trait_positionallykeyed 	= array,
+		public	set::trait_positionallykeyed 		= array,
+		public	where::trait_positionallykeyed 	= array 
 
 	public oncreate => {}
 	public oncreate(ds::ds) => {

@@ -26,7 +26,7 @@ define sequential_node => type {
 define sequential => type {
 	
 	trait {
-		import	trait_contractible, trait_searchable, trait_expandable, trait_keyed, trait_foreach, trait_keyedforeach 
+		import	trait_contractible, trait_searchable, trait_expandable, trait_keyed, trait_foreach, trait_positionallykeyed, trait_keyedforeach 
 	}
 
 	data

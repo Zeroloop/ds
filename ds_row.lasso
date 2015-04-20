@@ -71,20 +71,20 @@ define ds_row => type{
 		.'row'	= staticarray
 	}
 	
-	public oncreate(index::trait_searchable,cols::trait_foreach,row::staticarray,dsinfo::null=null,ds::null=null)=>{
+	public oncreate(index::trait_searchable,cols::trait_positionallykeyed,row::staticarray,dsinfo::null=null,ds::null=null)=>{
 		.'index'= #index
 		.'cols' = #cols
 		.'row'	= #row
 	}
 
-	public oncreate(index::trait_searchable,cols::trait_foreach,row::staticarray,dsinfo::dsinfo)=>{
+	public oncreate(index::trait_searchable,cols::trait_positionallykeyed,row::staticarray,dsinfo::dsinfo)=>{
 		.'index'	= #index
 		.'cols' 	= #cols
 		.'row'	 	= #row
 		.'dsinfo' 	= #dsinfo
 	}
 
-	public oncreate(index::trait_searchable,cols::trait_foreach,row::staticarray,dsinfo::dsinfo,ds::ds)=>{
+	public oncreate(index::trait_searchable,cols::trait_positionallykeyed,row::staticarray,dsinfo::dsinfo,ds::ds)=>{
 		.'index'	= #index
 		.'cols' 	= #cols
 		.'row'	 	= #row

@@ -245,14 +245,14 @@ define ds => type{
 
 		else(#host)			
 			//	Host specified, skip look up — fast
-			#dsinfo->hostdatasource 	= #datasource
-			#dsinfo->hostid 			= 0
-			#dsinfo->hostname 			= #host
-			#dsinfo->hostport 			= #port->asstring
-			#dsinfo->hostusername 		= #username
-			#dsinfo->hostpassword 		= #password
-			#dsinfo->hosttableencoding 	= #encoding
-			#dsinfo->hostschema 		= #schema
+			#dsinfo->hostdatasource    = #datasource
+			#dsinfo->hostid            = 0
+			#dsinfo->hostname          = #host
+			#dsinfo->hostport          = #port->asstring
+			#dsinfo->hostusername      = #username
+			#dsinfo->hostpassword      = #password
+			#dsinfo->hosttableencoding = #encoding
+			#dsinfo->hostschema        = #schema
 	
 			.'capi' = \#datasource
 			
@@ -685,7 +685,7 @@ define ds => type{
 		|	return (:.'keycolumn')
 	}
 		
-	public keycolumns=(keycolumns::trait_foreach) => {
+	public keycolumns=(keycolumns::trait_positionallykeyed) => {
 		.'dsinfo'->keycolumns = (
 			with col in #keycolumns
 			select .keyvalue(#col = null)
@@ -697,7 +697,7 @@ define ds => type{
 	public keycolumns(key::string,...) => .keycolumns((with p in params select #p)->asstaticarray)
 	public keycolumns(key::tag,...) => .keycolumns((with p in params select #p->asstring)->asstaticarray)
 	
-	public keycolumns(keycolumns::trait_foreach) => {
+	public keycolumns(keycolumns::trait_positionallykeyed) => {
 		.keycolumns = #keycolumns
 		return self
 	}
@@ -718,7 +718,7 @@ define ds => type{
 		return (with p in #keys->eachpair select .keyvalue(#p))->asstaticarray
 	}
 
-	private keyvalues(keys::trait_foreach) => {
+	private keyvalues(keys::trait_positionallykeyed) => {
 		return (with p in #keys select .keyvalue(#p))->asstaticarray
 	}
 	
@@ -732,7 +732,7 @@ define ds => type{
 //
 //---------------------------------------------------------------------------------------	
 	
-	private inputcolumns(p::trait_foreach) => {
+	private inputcolumns(p::trait_positionallykeyed) => {
 		local(input) = array
 
 		#p->foreach => {
@@ -870,10 +870,10 @@ define ds => type{
 //
 //---------------------------------------------------------------------------------------
 
-	public addrow(p::pair,...)           => .execute(::add,.table,staticarray,params,true) => givenblock
-	public addrow(p::trait_keyedforeach) => .execute(::add,.table,staticarray,#p->eachpair->asstaticarray,true) => givenblock
-	public addrow(p::trait_foreach)      => .execute(::add,.table,staticarray,#p->asstaticarray,true) => givenblock
-	public addrow(data::staticarray)     => .execute(::add,.table,staticarray,#data,true) => givenblock
+	public addrow(p::pair,...)                => .execute(::add,.table,staticarray,params,true) => givenblock
+	public addrow(p::trait_keyedforeach)      => .execute(::add,.table,staticarray,#p->eachpair->asstaticarray,true) => givenblock
+	public addrow(p::trait_positionallykeyed) => .execute(::add,.table,staticarray,#p->asstaticarray,true) => givenblock
+	public addrow(data::staticarray)          => .execute(::add,.table,staticarray,#data,true) => givenblock
 
 	public addrow(totable::string,data::trait_keyedforeach) => .execute(::add,
 		#totable,
@@ -982,14 +982,14 @@ define ds => type{
 
 	public getrows(keyvalue,...)               => .getfrom(.table,params)
 	public getrows(keyvalue::pair,p::pair,...) => .getfrom(.table,params)
-	public getrows(keyvalues::trait_foreach)   => .getfrom(.table,#keyvalues)
+	public getrows(keyvalues::trait_positionallykeyed)   => .getfrom(.table,#keyvalues)
 
 	public getfrom(table::tag,keyvalue::any)        => .getfrom(#table->asstring,#keyvalue)
 	public getfrom(table::string,keyvalue::string)  => .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
 	public getfrom(table::string,keyvalue::integer) => .execute(::search,#table,.keyvalues(.keycolumn=#keyvalue),staticarray)->rows
 	public getfrom(table::string,key::pair)         => .execute(::search,#table,.keyvalues(#key),staticarray)->rows
 
-	public getfrom(table::string,keyvalues::trait_foreach) 	=> {		
+	public getfrom(table::string,keyvalues::trait_positionallykeyed) 	=> {		
 		local(
 			matchall = false,
 			params = array(
@@ -1086,13 +1086,13 @@ define ds => type{
 
 	public insert(table::tag,...columns)                => .insert_statement->into(#table,#columns) => givenblock
 	public insert(table::string,...columns)             => .insert_statement->into(#table,#columns) => givenblock
-	public insert(table::tag,columns::trait_foreach)    => .insert_statement->into(#table,#columns) => givenblock
-	public insert(table::string,columns::trait_foreach) => .insert_statement->into(#table,#columns) => givenblock
+	public insert(table::tag,columns::trait_positionallykeyed)    => .insert_statement->into(#table,#columns) => givenblock
+	public insert(table::string,columns::trait_positionallykeyed) => .insert_statement->into(#table,#columns) => givenblock
 
 	public update(table::tag,...where)                => .update_statement->update(#table,#where) => givenblock
 	public update(table::string,...where)             => .update_statement->update(#table,#where) => givenblock
-	public update(table::tag,where::trait_foreach)    => .update_statement->update(#table,#where) => givenblock
-	public update(table::string,where::trait_foreach) => .update_statement->update(#table,#where) => givenblock
+	public update(table::tag,where::trait_positionallykeyed)    => .update_statement->update(#table,#where) => givenblock
+	public update(table::string,where::trait_positionallykeyed) => .update_statement->update(#table,#where) => givenblock
 
 	public update(...) => .update_statement->set(:#rest || staticarray) => givenblock
 	public set(...)    => .update_statement->set(:#rest || staticarray) => givenblock
