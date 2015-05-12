@@ -307,7 +307,7 @@ define ds_result => type {
 	public first(col::tag) 	  => .first->find(#col->asstring)
 
 	public last => .rows->last
-	public lastrow(...) => .first(:#rest || staticarray)
+	public lastrow(...) => .last(:#rest || staticarray)
 	public last(col::string) => .last->find(#col)
 	public last(col::string) => .last->find(#col)
 
