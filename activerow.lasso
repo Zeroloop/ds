@@ -9,7 +9,7 @@ define activerow_pluralise_tables => true
 define activerow_default_timestamp_format => 'yyyy-MM-dd HH:mm:ss'
 define activerow_default_created_column => ''
 define activerow_default_modified_column => ''
-	
+
 define activerow => type {
 	
 	data
@@ -102,6 +102,19 @@ define activerow => type {
 			.updatedata(.keycolumn = #keyvalue)
 		}
 		return self
+	}
+
+	public getrow => {
+		if(.modified_data->size) => {
+			return .getrow(:
+						( with pair in .modified_data->eachpair 
+						  select #pair 
+						)->asstaticarray
+					)
+
+		}
+
+		return self 
 	}
 
 	// support blindly relayed params
@@ -234,7 +247,10 @@ define activerow => type {
 
 		// Do nothing when new
 		.isnew ? return
-		
+
+		// Force row table
+		#row->table = .table 
+
 		// Nothing has changed so do nothing
 		not #row->modified_data->size ? return
 
@@ -317,7 +333,7 @@ define activerow => type {
 		.updatedata(:params)
 		return .save
 	}
-
+ 
 	public save(ds::ds=.ds) => {
 		local(row) = .row
 	
@@ -360,7 +376,11 @@ define activerow => type {
 
 }
 
+/*
 define json_serialize(p::activerow) => json_serialize(#p->asmap)
 
+::json_encode->istype
+? define json_encode->encodeValue(p::activerow) => .encodeValue(#p->asmap)
+*/
 
 ?>
