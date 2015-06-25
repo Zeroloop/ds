@@ -278,7 +278,7 @@ define ds => type{
 			#dsinfo->hostschema        = #hostinfo->get(7)
 			#dsinfo->hosttableencoding = #hostinfo->get(8)||#encoding
 			#dsinfo->databasename      = #hostinfo->get(9)
-			#dsinfo->tablename         = #table
+			#dsinfo->tablename         = #hostinfo->get(10)||#table
 
 			.'capi' = \#datasource
 		else 
@@ -340,7 +340,8 @@ define ds => type{
 			h.password,
 			h.schema,
 			"" as encoding,
-			db.name AS database
+			db.name AS database,
+			"" as table
 			
 		FROM 	datasources AS ds,
 				datasource_hosts AS h, 
@@ -366,7 +367,8 @@ define ds => type{
 			h.password,
 			h.schema,
 			tb.encoding,
-			db.name AS database
+			db.name AS database,
+			tb.name AS table
 			
 		FROM 	datasources AS ds,
 				datasource_hosts AS h, 
