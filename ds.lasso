@@ -448,6 +448,8 @@ define ds => type{
 			#dsinfo->hostpassword      = #d->hostpassword
 			#dsinfo->hosttableencoding = #d->hosttableencoding
 			#dsinfo->hostschema        = #d->hostschema
+			#dsinfo->databasename      = #d->databasename
+			#dsinfo->tablename         = #d->tablename
 
 			#dsinfo->connection = #d->connection
 			#dsinfo->prepared   = #d->prepared
