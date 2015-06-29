@@ -559,8 +559,8 @@ define ds => type{
 			? #dsinfo->keycolumns = staticarray
 
 			// Key values should not be used on add (::mysqlds returns random rows)
-			| #dsinfo->action == lcapi_datasourceadd && #keycolumns->size && #keycolumns->get(1)->get(3)->isa(::null) 
-			? #dsinfo->keycolumns = staticarray
+			// | #dsinfo->action == lcapi_datasourceadd && #keycolumns->size && #keycolumns->get(1)->get(3)->isa(::null) 
+			// ? #dsinfo->keycolumns = staticarray
 		
 			#result = #capi->invoke(#dsinfo)			
 			#result ? return #result
