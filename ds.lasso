@@ -241,7 +241,10 @@ define ds => type{
 		if(.primed) => { 
 			
 			// Reusing details + connection (if active)
-			#store = false 
+			#store = false
+			//	Replace database and table (most likely the same unless key)
+			#dsinfo->databasename = #database
+			#dsinfo->tablename    = #table
 
 		else(#host)			
 			//	Host specified, skip look up — fast
