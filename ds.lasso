@@ -241,10 +241,7 @@ define ds => type{
 		if(.primed) => { 
 			
 			// Reusing details + connection (if active)
-			#store = false
-			//	Replace database and table (most likely the same unless key)
-			#dsinfo->databasename = #database
-			#dsinfo->tablename    = #table
+			#store = false 
 
 		else(#host)			
 			//	Host specified, skip look up — fast
@@ -256,8 +253,6 @@ define ds => type{
 			#dsinfo->hostpassword      = #password
 			#dsinfo->hosttableencoding = #encoding
 			#dsinfo->hostschema        = #schema
-			#dsinfo->databasename      = #database
-			#dsinfo->tablename         = #table
 	
 			.'capi' = \#datasource
 			
@@ -272,26 +267,24 @@ define ds => type{
 			fail_if(!#hostinfo,'Unable to determine host for: '+#database+'.'+#table)
 			
 			//	Set properties from found info
-			#dsinfo->hostdatasource    = #hostinfo->get(1)
-			#dsinfo->hostid            = #hostinfo->get(2)	
-			#dsinfo->hostname          = #hostinfo->get(3)
-			#dsinfo->hostport          = #hostinfo->get(4)
-			#dsinfo->hostusername      = #hostinfo->get(5)
-			#dsinfo->hostpassword      = #hostinfo->get(6)
-			#dsinfo->hostschema        = #hostinfo->get(7)
-			#dsinfo->hosttableencoding = #hostinfo->get(8)||#encoding
-			#dsinfo->databasename      = #hostinfo->get(9)
-			#dsinfo->tablename         = #hostinfo->get(10)||#table
+			#dsinfo->hostdatasource 	= #hostinfo->get(1)
+			#dsinfo->hostid 			= #hostinfo->get(2)	
+			#dsinfo->hostname 			= #hostinfo->get(3)
+			#dsinfo->hostport 			= #hostinfo->get(4)
+			#dsinfo->hostusername 		= #hostinfo->get(5)
+			#dsinfo->hostpassword		= #hostinfo->get(6)
+			#dsinfo->hostschema 		= #hostinfo->get(7)
+			#dsinfo->hosttableencoding 	= #hostinfo->get(8)||#encoding	
 
 			.'capi' = \#datasource
 		else 
-			#store = false
-
-			//	Replace database and table (most likely the same unless key)
-			#dsinfo->databasename = #database
-			#dsinfo->tablename    = #table
+			#store = false 
 		}
-		#dsinfo->maxrows = #maxrows
+
+		//	Replace database and table (most likely the same unless key)
+		#dsinfo->databasename		= #database
+		#dsinfo->tablename			= #table
+		#dsinfo->maxrows 			= #maxrows
 
 		//	Legacy: leverage clasic inlie constructor
 		if(#useinfo) => {
@@ -342,9 +335,7 @@ define ds => type{
 			h.username,
 			h.password,
 			h.schema,
-			"" as encoding,
-			db.name AS database,
-			"" as table
+			"" as encoding
 			
 		FROM 	datasources AS ds,
 				datasource_hosts AS h, 
@@ -369,9 +360,7 @@ define ds => type{
 			h.username,
 			h.password,
 			h.schema,
-			tb.encoding,
-			db.name AS database,
-			tb.name AS table
+			tb.encoding
 			
 		FROM 	datasources AS ds,
 				datasource_hosts AS h, 
@@ -451,8 +440,6 @@ define ds => type{
 			#dsinfo->hostpassword      = #d->hostpassword
 			#dsinfo->hosttableencoding = #d->hosttableencoding
 			#dsinfo->hostschema        = #d->hostschema
-			#dsinfo->databasename      = #d->databasename
-			#dsinfo->tablename         = #d->tablename
 
 			#dsinfo->connection = #d->connection
 			#dsinfo->prepared   = #d->prepared
