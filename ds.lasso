@@ -529,7 +529,7 @@ define ds => type{
 	
 		fail_if(not #capi, 'No datasource: check -database, -table or -datasource')
 
-		not .active ? .store 
+		not .active ? handle => {.store}
 
 		protect => {
 
@@ -817,11 +817,14 @@ define ds => type{
 		firstrow::boolean=false
 	) => {
 
-		//	New dsinfo
+		// New dsinfo
 		local(
 			d = .'dsinfo',
 			dsinfo = dsinfo
 		)
+
+		// Ensure current DS is primed
+		.primed
 
 		#dsinfo->databasename = #d->databasename
 		#dsinfo->tablename    = #d->tablename
