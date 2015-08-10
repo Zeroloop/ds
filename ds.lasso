@@ -15,18 +15,31 @@ define ds_connections => {
 	if(var(__ds__connections__)->isnota(::map)) => {
 		$__ds__connections__ = map
 
-		web_request ? define_atend({
-			ds_connections->foreach => {				
-				//stdout(#1->key+': ')
-				#1->close
-				//stdoutnl('closed')	
-			}
-		}) 
+		// Queue closure of connections
+		web_request ? define_atend({ds_close_connections})
 	} 
 	return $__ds__connections__
 }
 
-define ds_close_connections => ds_connections->foreach => {#1->close}
+define ds_close_connections => {
+
+	// Marked connections closed
+	handle => {
+		ds_connections_closed = 1
+	}
+
+	ds_connections->foreach => {
+	    // stdout('Connection ' + #1->dsinfo->connection)
+		#1->close
+		// stdoutnl(' - closed')
+	}
+	
+
+}
+
+define ds_connections_closed => var(__ds_connections_closed) || 0
+
+define ds_connections_closed = (p::integer) => var(__ds_connections_closed) := #p
 
 //---------------------------------------------------------------------------------------
 //
@@ -73,7 +86,7 @@ define ds => type{
 		#ds->dsinfo = .dsinfo->makeinheritedcopy
 		#ds->key    = .key
 		#ds->capi   = .capi
-		
+
 		return #ds
 	
 	}
@@ -237,10 +250,9 @@ define ds => type{
 			.keycolumn = #keycolumn || .keycolumn
 			#store ? .store // Details only (connection unlikely)
 		}
-		
+
 		if(.primed) => { 
-			
-			// Reusing details + connection (if active)
+			// Reusing details + connection (if isactive)
 			#store = false 
 
 		else(#host)			
@@ -257,7 +269,6 @@ define ds => type{
 			.'capi' = \#datasource
 			
 		else(#database) 	
-	
 			//	Look up database info (slow due to extra db call)
 		
 			#table // if table specified check for specific encoding
@@ -408,20 +419,29 @@ define ds => type{
 	}
 
 	private store => {
-		ds_connections->insert(.key = self)
+		// Don't store connections when the thread has been closed off
+		.storeconnection
+		? ds_connections->insert(.key = self)
 	}
 
-	// Load Connection
-	// Connection could be stored but not active
-	// We still want to use the details (dsinfo)
+	private store(dsinfo::dsinfo) => {
+		// Deal with multiple unopened connections
+    	.dsinfo->connection = #dsinfo->connection
+		.dsinfo->prepared   = #dsinfo->prepared
+		.dsinfo->refobj     = #dsinfo->refobj
+        .store 
+	}
 
-	// On invoke we must ensure we use an active connection
+	private active => ds_connections->find(.key)
 
 	private primed => {
+		// Connection could be stored but not active — primed deals with this
+		// We still want to use the details (dsinfo) and connection if active
+		// On invoke we must ensure we use an active connection via .active
 	
 		local(
 			dsinfo = .dsinfo,
-			active = ds_connections->find(.key),
+			active = .active,
 			d
 		)
 
@@ -430,7 +450,7 @@ define ds => type{
 
 			//	Check for existing connection
 			.'capi' 	= #active->capi
-			
+
 			//	Ensure thread safe
 			#dsinfo->hostdatasource    = #d->hostdatasource
 			#dsinfo->hostid            = #d->hostid
@@ -450,33 +470,44 @@ define ds => type{
 
 		return false 
 	}
+ 
 
-	private active => {
-		// Do nothing if has connection
-		 .dsinfo->connection ? return true
+	private storeconnection => ! ds_connections_closed && web_request ? 1 | 0 
+
+	private isactive => {
+		
+		// Previously this did nothing if had a .dsinfo->connection
+		// This caused a problem if another ds had closed the connection
+		// takes 5 micros vs 1 micros  
+
+		! .storeconnection 
+		? return 0 
 
 		local(
 			dsinfo = .dsinfo,
-			active = ds_connections->find(.key),
+			active = .active,
 			d
 		)
 	
 		if(#active && #active->dsinfo->connection) => { 
 			#d = #active->dsinfo
 
-			//	Re use existing connection
+			// Re use existing connection
 			.'capi'             = #active->capi
 			#dsinfo->connection = #d->connection
 			#dsinfo->prepared   = #d->prepared
 			#dsinfo->refobj     = #d->refobj
-
-			return true
-
+			return 1
 		}
 
-	}
+		// If the connection connection is not active then open and store a new one
+		#dsinfo->connection = 0
+
+		return 0
+	}   
 
 	public close(dsinfo::dsinfo = .dsinfo) => {
+    	
 		if(#dsinfo->connection) => {
 
 			#dsinfo->action = lcapi_datasourcetickle
@@ -485,10 +516,16 @@ define ds => type{
 			#dsinfo->action = lcapi_datasourceCloseConnection
 			.'capi'->invoke(#dsinfo)
 
+			// Ensure both supplied connection and own connection are cleared
 			#dsinfo->connection = 0
+			.connection = 0
+		
+			// Deal with descendants
+			local(active) = ds_connections->find(.key)
+			#active ? #active->dsinfo->connection = 0
 
 			// This is needed for thread support
-			.dsinfo = #dsinfo->makeinheritedcopy			
+			.dsinfo = #dsinfo->makeinheritedcopy 
 		}
 	}
 	
@@ -506,8 +543,8 @@ define ds => type{
 
 	public invoke(dsinfo::dsinfo = .'dsinfo') => {
 	
-		//	Close connection when not web_request not ideal, but safe.
-		not web_request ? handle => {.close(#dsinfo)}
+		//	Close connection if thread or if new connection is after connections closed 
+		! .storeconnection ? handle => {.close(#dsinfo)}
 		
 		//	Remove old results
 		.removeall
@@ -523,13 +560,13 @@ define ds => type{
 			affected,
 			keycolumns,
 			index,
-			cols,
+			cols, 
 			col 
 		)
 	
 		fail_if(not #capi, 'No datasource: check -database, -table or -datasource')
 
-		not .active ? handle => {.store}
+		.storeconnection && not .isactive  ? handle => { .store } 
 
 		protect => {
 
@@ -798,7 +835,7 @@ define ds => type{
 		return self
 	}
 
-	public all             => .maxrows(-1)
+	public all => .maxrows(-1)
 
 	public affected => .'results'->size ? .'results'->last->affected | 0
 	public found	=> .'results'->size ? .'results'->last->found | 0
@@ -819,16 +856,17 @@ define ds => type{
 
 		// New dsinfo
 		local(
-			d = .'dsinfo',
-			dsinfo = dsinfo
+			d              = .'dsinfo',
+			dsinfo         = dsinfo,
 		)
 
 		// Ensure current DS is primed
-		.primed
+	    .primed
 
-		#dsinfo->databasename = #d->databasename
-		#dsinfo->tablename    = #d->tablename
-		#dsinfo->maxrows      = #d->maxrows
+	
+		#dsinfo->databasename      = #d->databasename
+		#dsinfo->tablename         = #d->tablename
+		#dsinfo->maxrows           = #d->maxrows
 
 		#dsinfo->hostdatasource    = #d->hostdatasource
 		#dsinfo->hostid            = #d->hostid
@@ -839,10 +877,23 @@ define ds => type{
 		#dsinfo->hosttableencoding = #d->hosttableencoding
 		#dsinfo->hostschema        = #d->hostschema
 
-		#dsinfo->connection = #d->connection
-		#dsinfo->prepared   = #d->prepared
-		#dsinfo->refobj     = #d->refobj
-		
+		#dsinfo->connection        = #d->connection
+		#dsinfo->prepared          = #d->prepared
+		#dsinfo->refobj            = #d->refobj
+	
+		/*
+		handle => {
+			#d->tablename    = #org_table
+			#d->keycolumns   = #org_keycolumns
+			#d->inputcolumns = (:)
+		}*/
+
+
+		//	Set values
+		#dsinfo->tablename    = #table
+		#dsinfo->keycolumns   = (#keyvalues->size ? #keyvalues | .keyvalues)
+		#dsinfo->inputcolumns = .inputcolumns(#values)
+
 		//	Determine action
 		match(#action) => {
 			case(::add)		#dsinfo->action = lcapi_datasourceadd
@@ -850,21 +901,16 @@ define ds => type{
 			case(::search)	#dsinfo->action = lcapi_datasourcesearch
 			case(::delete)	#dsinfo->action = lcapi_datasourcedelete
 			case return self
-		}
-		
-		//	Set values
-		#dsinfo->tablename 		= #table
-		#dsinfo->keycolumns 	= (#keyvalues->size ? #keyvalues | .keyvalues)
-		#dsinfo->inputcolumns 	= .inputcolumns(#values)
+		}		
 
 		handle => {
 			if(!#d->connection && #dsinfo->connection) => {
 				#d->connection 	= #dsinfo->connection
 				#d->prepared 	= #dsinfo->prepared
 				#d->refobj 		= #dsinfo->refobj			
-			}
+			}			
 			#d->statement = #dsinfo->statement 
-		}
+		} 
 
 		local(out) = .invoke(#dsinfo) => givenblock 
 
