@@ -518,7 +518,7 @@ define ds => type{
 
 			// Ensure both supplied connection and own connection are cleared
 			#dsinfo->connection = 0
-			.connection = 0
+			.dsinfo->connection = 0
 		
 			// Deal with descendants
 			local(active) = ds_connections->find(.key)
