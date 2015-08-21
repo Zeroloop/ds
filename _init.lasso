@@ -1,5 +1,4 @@
 <?lassoscript
-
 with file in (:
 	'sequential.lasso',
 	'tables.lasso',
@@ -17,11 +16,11 @@ with file in (:
 	}
 	
 	stdout('\t' + #file + ' - ')
-	web_request
-	? include(include_path + #file)
+
+	// allow relative includes
+	self->filename !>> '/instances/'
+	? library(include_path + #file)
 	| lassoapp_include(#file)
 	
 }	
-stdoutnl('\tdone')
-
 ?>
