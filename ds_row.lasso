@@ -42,7 +42,9 @@ define ds_row => type{
 			out = array,
 			col	
 		)
-		.'dsinfo'->keycolumns->foreach => {
+		
+		.'dsinfo'->keycolumns
+		? .'dsinfo'->keycolumns->foreach => {
 			#col = #1->get(1)
 			#out->insert((:#col,#1->get(2),.raw(#col->asstring)))
 		}
