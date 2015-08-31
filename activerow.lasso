@@ -277,11 +277,16 @@ define activerow => type {
 
 	public create => {
 		local(
-			row = .row,
-			now = date,
-			key 
+			keycolumns = .ds->dsinfo->keycolumns,
+			row        = .row,
+			now        = date,
+			key  
 		)
-		
+
+		// Key values should not be used on add (::mysqlds can return random rows)
+		handle => { .ds->dsinfo->keycolumns = #keycolumns }
+		.ds->dsinfo->keycolumns = staticarray
+  
 		//	Should we create a row when no data? — it should probably cause an error
 		.generate_uuid ? #row->insert(
 			.keycolumn = lasso_uniqueid
@@ -311,7 +316,7 @@ define activerow => type {
 		#row = .ds->addrow(.table,#row->modified_data)
 
 		// If keyvalue is forced we must load the row
-		if(!#row && #key && ! .keyvalue) => {
+		if(!#row && #key && !.keyvalue) => {
 			#row = .ds->getfrom(.table,.keycolumn = #key)->first
 		}
 
