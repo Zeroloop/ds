@@ -114,6 +114,10 @@ define hashtable => type {
 	public index(p::any) 		=> .index(bytes(#p))
 	
 	public newnode => sequential
+
+	public oncreate(...) => {
+		params->foreach => {.insert(#1)}
+	}
 	
 }
 
@@ -136,6 +140,9 @@ define indextable => type {
 		
 	public newnode => sequential
 
+	public oncreate(...) => {
+		params->foreach => {.insert(#1)}
+	}
 }
 
 ?>
