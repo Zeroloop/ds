@@ -230,7 +230,7 @@ define select_statement => type {
 
 	public groupby(reset::boolean) => {
 		! #reset
-		? return .switch(::limit,array) => givenblock 
+		? return .switch(::groupby,array) => givenblock 
 		| return .invokeifblock => givenblock
 	}
 
