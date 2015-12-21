@@ -243,10 +243,16 @@ define activerow => type {
 	
 	public update => {
 
-		local(row) = .row
+		local(
+			now = date,
+			row = .row
+		)
 
 		// Do nothing when new
 		.isnew ? return
+
+		//	Check for specific timezone (ie. UTC)
+		.timestamp_timezone ? #now->timezone = .timestamp_timezone
 
 		// Force row table
 		#row->table = .table 
@@ -256,7 +262,7 @@ define activerow => type {
 
 		// Add timestamp when column specified
 		.modified_column ? #row->insert(
-			.modified_column = date->format(.timestamp_format)
+			.modified_column = #now->format(.timestamp_format)
 		)
 		
 		// Patch lost rows — normally from ds(::database)->rows
@@ -264,9 +270,7 @@ define activerow => type {
 
 		// Only update when modified (perhaps the above shouldn't be considered)/
 		#row->update
-
-		// alt approach, update via row
-		// #row->modified_data->size ? #row->update(#row->modified_data)
+		
 	}
 
 //---------------------------------------------------------------------------------------
@@ -276,7 +280,7 @@ define activerow => type {
 //---------------------------------------------------------------------------------------
 
 	public create => {
-		local(
+		local( 
 			keycolumns = .ds->dsinfo->keycolumns,
 			row        = .row,
 			now        = date,
@@ -292,7 +296,7 @@ define activerow => type {
 			.keycolumn = lasso_uniqueid
 		)
 
-		//	Check if should use UTC
+		//	Check for specific timezone (ie. UTC)
 		.timestamp_timezone ? #now->timezone = .timestamp_timezone
 
 		#key = .find(.keycolumn)
