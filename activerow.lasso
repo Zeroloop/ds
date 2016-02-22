@@ -390,4 +390,8 @@ define json_serialize(p::activerow) => json_serialize(#p->asmap)
 ::json_encode->istype
 ? define json_encode->encodeValue(p::activerow) => .encodeValue(#p->asmap)
 
+::json_encode_utf8->istype
+? define json_encode_utf8->encode(p::activerow) => .encode(#p->asmap)
+
+
 ?>
