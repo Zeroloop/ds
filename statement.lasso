@@ -85,6 +85,10 @@ define statement => type {
 		return .invokeifblock => givenblock
 	}
 
+	public get(target::tag) => {
+		return (.escape_member(tag(`'`+#target->asstring + `'`)))->invoke()
+	}
+
 //---------------------------------------------------------------------------------------
 //
 //	SQL encoder (leaves ints & decimals untouched, supports IN )
