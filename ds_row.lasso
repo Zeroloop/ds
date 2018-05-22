@@ -137,6 +137,22 @@ define ds_row => type{
 		.'modified_data'->insert(#pair)
 	}
 
+
+	public dsinfo => .'dsinfo'
+
+	// Needed to support theads
+
+	public ascopy => {
+		local(
+			keycolumns = .dsinfo->keycolumns,
+			copy = ..ascopy 
+		)
+
+		#copy->dsinfo->keycolumns = #keycolumns
+
+		return #copy 
+	}	
+
 //---------------------------------------------------------------------------------------
 //
 // 	Update internal data
