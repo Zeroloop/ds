@@ -149,8 +149,13 @@ define activerow => type {
 	}
 	
 	public table => {
-		.'table' 	? return .'table'		//	Use specified table
-		.ds->table	? return .ds->table		//	Default to DS table
+		//	Use specified table
+		.'table' 	          
+		? return .'table'		
+		
+		//	Default to DS table
+		.'ds' && .'ds'->table
+		? return .'ds'->table		
 
 		//	Determin table based on type
 		local(t) = .type->asstring->lowercase &
