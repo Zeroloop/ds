@@ -170,10 +170,14 @@ define activerow => type {
 //---------------------------------------------------------------------------------------
 
 	public ds => {
-	//	handle => { debug('.ds->type' = .'ds'->type)}
 	
-		.'ds'->isa(::ds) 	? return .'ds'
-		.row->ds->isa(::ds) ? return .'ds' := .row->ds
+		// Return internal ds
+		.'ds'->isa(::ds) 
+		? return .'ds'
+		
+		// Return rows ds
+		.'row'->isa(::ds_row) && .'row'->ds->isa(::ds) 
+		? return .'ds' := .'row'->ds
 		
 		if(.database && .table) => {
 			return .'ds' := ds(.database,.table)
