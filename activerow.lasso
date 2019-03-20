@@ -141,6 +141,9 @@ define activerow => type {
 	}
 	
 	public isnew => not .keyvalue	
+
+	public isnotnew => !.isnew
+
 	public asnew => {
 		local(out) = self->ascopy
 		#out->row->keyvalue = null
