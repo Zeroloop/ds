@@ -140,9 +140,9 @@ define activerow => type {
 
 	}
 	
-	public isnew => not .keyvalue	
-
-	public isnotnew => !.isnew
+	public isnew => not .keyvalue
+	
+	public isnotnew => ! .isnew
 
 	public asnew => {
 		local(out) = self->ascopy
@@ -157,15 +157,16 @@ define activerow => type {
 		? return .'table'		
 		
 		//	Default to DS table
-		.'ds' && .'ds'->table
-		? return .'ds'->table		
+		.ds && .ds->table
+		? return .'table' := .ds->table		
 
 		//	Determin table based on type
 		local(t) = .type->asstring->lowercase &
 
 		! #t->endswith('s') && activerow_pluralise_tables
 		? #t->append('s')
-		
+
+		// Set from name
 		return .'table' := #t
 	}
 
@@ -178,17 +179,18 @@ define activerow => type {
 //---------------------------------------------------------------------------------------
 
 	public ds => {
-	
+
 		// Return internal ds
 		.'ds'->isa(::ds) 
 		? return .'ds'
 		
 		// Return rows ds
-		.'row'->isa(::ds_row) && .'row'->ds->isa(::ds) 
+		.'row'->isa(::ds_row) // && .'row'->ds->isa(::ds) 
 		? return .'ds' := .'row'->ds
-		
-		if(.database && .table) => {
-			return .'ds' := ds(.database,.table)
+
+		// Use specified .table 
+		if(.database && .'table') => {
+			return .'ds' := ds(.database,.'table')
 		else(.database)
 			fail('.table not specified')
 		else
