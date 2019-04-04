@@ -185,7 +185,7 @@ define activerow => type {
 		? return .'ds'
 		
 		// Return rows ds
-		.'row'->isa(::ds_row) // && .'row'->ds->isa(::ds) 
+		.'row'->isa(::ds_row) && .'row'->ds->isa(::ds) 
 		? return .'ds' := .'row'->ds
 
 		// Use specified .table 
