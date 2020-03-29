@@ -214,7 +214,14 @@ define activerow => type {
 //
 //---------------------------------------------------------------------------------------
 	
-	public delete => not .isnew ? .row->delete
+	public delete => {
+		local(row) = .row 
+
+		// Force row table
+		#row->table = .table 		
+
+		not .isnew ? #row->delete	
+	}
 
 //---------------------------------------------------------------------------------------
 //
