@@ -100,12 +100,10 @@ define ds_result => type {
 			#cols->insert(#col := #1->get(INLINE_COLINFO_NAME_POS))
 			#index->insert(#col = #i++)
 		}
-
-		#cols = #cols->asstaticarray
 		
-		.'cols'			= #cols
+		.'cols'			= #cols->asstaticarray
 		.'index'		= #index
-		.'rows' 		= #rows
+		.'rows' 		= #rows->asstaticarray
 		.'set' 			= #set
 		.'found'		= #found
 		.'affected' 	= #affected
@@ -220,7 +218,7 @@ define ds_result => type {
 		
 		.gb(#rows) => givenblock
 
-		return #rows		
+		return #rows->asstaticarray
 	}	
 
 	public rows(type::tag) => {
@@ -233,7 +231,8 @@ define ds_result => type {
 			#row = #base->ascopy 
 			#row->oncreate(#1)		
 			#out->insert(#row)
-		}		
+		}
+		#out = #out->asstaticarray
 		.gb(#out) => givenblock		
 		return #out
 	}
@@ -247,11 +246,12 @@ define ds_result => type {
 				#creator(#1)
 			)
 		}
+		#out = #out->asstaticarray
 		.gb(#out) => givenblock		
 		return #out
 	}
 	
-	private gb(rows::array) => {
+	private gb(rows::trait_foreach) => {
 		local(gb) = givenblock
 		if(#gb) => {
 			result_push(self)
@@ -264,7 +264,7 @@ define ds_result => type {
 
 	public row(row::integer) => {
 		.'dsrows' ? return .'dsrows'->get(#row)
-		return ds_row(.'index',.'cols',.'rows'->get(#row),.'dsinfo',.'ds')
+		return ds_row(.'index', .'cols', .'rows'->get(#row), .'dsinfo', .'ds')
 	}
 
 	public asstring => {
