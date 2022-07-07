@@ -150,6 +150,13 @@ define activerow => type {
 		#out->updatedata(#out->row->asmap)
 		return #out
 	}
+
+	// Ensure key columns are retained
+	public ascopy => {
+		local(copy) = ..ascopy
+		#copy->row->dsinfo->keycolumns = .row->dsinfo->keycolumns
+		return #copy
+	}
 	
 	public table => {
 		//	Use specified table
