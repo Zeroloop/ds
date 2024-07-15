@@ -23,23 +23,26 @@ define ds_connections => {
 
 define ds_close_connections => {
 
-	// Marked connections closed
+	// Marked connections closing (this prevents connections being stored / they close after execution)
+	ds_connections_closing = 1
+
+	// Marked connections closed (this prevents connections being stored / they close after execution)
 	handle => {
 		ds_connections_closed = 1
 	}
-
-	ds_connections->foreach => {
-	    // stdout('Connection ' + #1->dsinfo->connection)
-		#1->close
-		// stdoutnl(' - closed')
-	}
 	
-
+	ds_connections->foreach => {
+		#1->close
+	}
 }
 
-define ds_connections_closed => var(__ds_connections_closed) || 0
+define ds_connections_closing => var(__ds_connections_closing) || 0
+define ds_connections_closing = (p::integer) => var(__ds_connections_closing) := #p
 
+
+define ds_connections_closed => var(__ds_connections_closed) || 0
 define ds_connections_closed = (p::integer) => var(__ds_connections_closed) := #p
+
 
 //---------------------------------------------------------------------------------------
 //
@@ -55,8 +58,16 @@ define datasource(...) => ds(:#rest || staticarray)
 //
 //---------------------------------------------------------------------------------------
 
-define ds_default_silent => false
+define ds_default_silent  => false
 define ds_default_maxrows => 50
+
+define ds_retry_lost_connections => false
+define ds_max_retry_attempts     => 1
+
+define ds_retry_error_strings => (:
+	'Lost connection',
+	'Can\'t connect to MySQL'
+)
 
 //---------------------------------------------------------------------------------------
 //
@@ -70,6 +81,7 @@ define ds => type{
 		public	dsinfo::dsinfo,
 		public	key::string = '',
 		public	silent::boolean,
+		public	attempts::integer = 0,
 		private	keycolumn::string = 'id',	
 		private results = staticarray,
 
@@ -82,10 +94,11 @@ define ds => type{
 	//	Thread safe copy
 	public ascopy => {
 		local(ds) = ds
-		
-		#ds->dsinfo = .dsinfo->makeinheritedcopy
-		#ds->key    = .key
-		#ds->capi   = .capi
+
+		#ds->dsinfo             = .dsinfo->makeinheritedcopy
+		#ds->dsinfo->keycolumns = .dsinfo->keycolumns 
+		#ds->key                = .key
+		#ds->capi               = .capi
 
 		return #ds
 	
@@ -392,7 +405,7 @@ define ds => type{
 //-----------------------------------------------------------
 	
 	public sql(
-		statement::string,maxrows::integer = .dsinfo->maxrows || ds_default_maxrows
+		statement::string, maxrows::integer = .dsinfo->maxrows || ds_default_maxrows
 	) => {
 		
 		//	Clear old results
@@ -411,7 +424,32 @@ define ds => type{
 		.sql = #statement
 		return self
 	}
-	
+
+	public sqlcomment => {
+		// No comment if a comment is already present
+		.'dsinfo' && .'dsinfo'->statement && .'dsinfo'->statement->asstring->beginswith('/*')
+		? return ''
+
+		// Otherwise check for given block
+		local(gb) = givenblock
+		if(#gb) => {
+			local(comments) = array 
+
+			#gb->self->isA(::void)
+			? #comments->insert('method: ' + #gb->methodname)
+			| #gb->self->isNotA(::sourcefile) 
+			  ? #comments->insert('method: ' + #gb->self->type->asString + '.' + #gb->methodname)
+			
+	 		#comments->insert('file: ' + #gb->callsite_file)
+	 		#comments->insert('date: ' + date)
+
+			return '/* ' + #comments->join(', ') + ' */\n'
+		}
+
+		// Otherwise no comment
+		return ''
+	}
+		
 	public sql=(statement::string) => {
 		local(dsinfo) =.'dsinfo'
 		#dsinfo->action 	= lcapi_datasourceExecSQL
@@ -449,7 +487,7 @@ define ds => type{
 			#d = #active->dsinfo
 
 			//	Check for existing connection
-			.'capi' 	= #active->capi
+			.'capi' = #active->capi
 
 			//	Ensure thread safe
 			#dsinfo->hostdatasource    = #d->hostdatasource
@@ -471,8 +509,7 @@ define ds => type{
 		return false 
 	}
  
-
-	private storeconnection => ! ds_connections_closed && web_request ? 1 | 0 
+	private storeconnection => !ds_connections_closed && web_request
 
 	private isactive => {
 		
@@ -534,6 +571,17 @@ define ds => type{
 		not #w ? #w = 'this'
 		fail('Oops — '+#w+' still needs to be implemented')
 	}
+
+	public shouldretry(error_msg::string, attempts::integer) => {
+		if(ds_retry_lost_connections && #attempts < ds_max_retry_attempts) => {
+			with key in ds_retry_error_strings 
+			where #error_msg >> #key
+			do {
+				return 1
+			}
+		}
+		return 0
+	}
 	
 //-----------------------------------------------------------
 //
@@ -543,9 +591,7 @@ define ds => type{
 
 	public invoke(dsinfo::dsinfo = .'dsinfo') => {
 	
-		//	Close connection if thread or if new connection is after connections closed 
-		! .storeconnection ? handle => {.close(#dsinfo)}
-		
+
 		//	Remove old results
 		.removeall
 	
@@ -563,10 +609,24 @@ define ds => type{
 			cols, 
 			col 
 		)
-	
+
+		// Automatically include SQL comments
+		if(#dsinfo->action == lcapi_datasourceExecSQL && #dsinfo->hostdatasource == 'mysqlds') => {
+			#dsinfo->statement 	= (.sqlcomment => #gb) + #dsinfo->statement
+		}
+
 		fail_if(not #capi, 'No datasource: check -database, -table or -datasource')
 
-		.storeconnection && not .isactive  ? handle => { .store } 
+		//	Close connection if thread or if new connection is after connections closed 
+		! .storeconnection
+		? handle => {
+			.close(#dsinfo)
+		}
+		
+		.storeconnection && not .isactive 
+		? handle => {
+			.store
+		} 
 
 		protect => {
 
@@ -577,14 +637,18 @@ define ds => type{
 				#error = (: error_code, error_msg, error_stack)
 
 				//	Restore keycolumn info
-				#dsinfo->keycolumns = #keycolumns
-				
+				#keycolumns
+				? #dsinfo->keycolumns = #keycolumns
+
 				//	Output errors		
 				if(error_code) => {
 					protect => {
 						debug(#dsinfo->statement)
 					}
-					stdoutnl('\nds error: ' + error_msg + '\n')
+					stdoutnl('\nds error: ' + error_msg + '\n' + error_stack)
+				else
+					// Clear attempts on success
+					.attempts = 0
 				}
 			}
 			
@@ -602,13 +666,30 @@ define ds => type{
 			#result = #capi->invoke(#dsinfo)			
 			#result ? return #result
 		}
-		
+	
+		//	Attempt on lost connection
+		if(.shouldretry(#error->get(2)->asstring, .attempts++)) => {
+			stdoutnl('ds retrying: ' + #error->get(2)->asstring + '\n' + error_stack)
+
+			// Pause for a moment 
+			sleep(500 * .attempts)
+
+			// Clear connection (since lost)
+			#dsinfo->connection = 0
+
+			// Return with given block
+			return (
+				.invoke(#dsinfo) => #gb 
+			)
+		}
+
 		if(.silent) => {
-			error_code = #error->get(1)
-			error_msg = #error->get(2)
+			error_code  = #error->get(1)
+			error_msg   = #error->get(2)
 			error_stack = #error->get(3) || ''
 		else
-			#error->get(1) ? fail(#error->get(1),#error->get(2),#error->get(3))			
+			#error->get(1) 
+			? fail(#error->get(1),#error->get(2),#error->get(3))			
 		}
 		
 		{
@@ -958,6 +1039,15 @@ define ds => type{
 		#row->modified_data->eachpair->asstaticarray
 	) => givenblock
 
+	// ds->updaterow(::table, 'column' = #value, -id = 123)
+
+	public updaterow(table::tag, col::pair, ...) => .execute(
+			::update,
+			#table->asstring,
+			(with p in params where #p->isa(::keyword) select pair(#p->name = #p->value))->asstaticarray, 
+			(with p in params where #p->isa(::pair) select #p)->asstaticarray, 
+		)
+
 	public updaterow(table::tag,data::trait_keyedforeach,key::any) => .updaterow(#table->asstring,#data,#key)
 
 	public updaterow(table::string,data::trait_keyedforeach,key::any) => .execute(::update,
@@ -978,13 +1068,13 @@ define ds => type{
  		#data
  	) => givenblock
  
-	public updaterow(data::trait_keyedforeach,key::pair,...) => .execute(::update,
+	public updaterow(data::trait_keyedforeach, key::pair, ...) => .execute(::update,
 		.table,
 		.keyvalues(tie((:#key), #rest || staticarray)->asstaticarray),
 		#data->eachpair->asstaticarray
 	) => givenblock
 
-	public updaterow(data::trait_keyedforeach,key::any) => .execute(::update,
+	public updaterow(data::trait_keyedforeach, key::any) => .execute(::update,
 		.table,
 		.keyvalues(#key),
 		#data->eachpair->asstaticarray
