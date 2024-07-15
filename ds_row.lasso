@@ -96,6 +96,7 @@ define ds_row => type{
 
 	
 	public columns	=> .cols
+	public values	=> .'row'
 	public cols		=> .'cols'
 	public keys		=> .'modified_data'->keys
 
@@ -136,7 +137,6 @@ define ds_row => type{
 	public insert(pair::pair) => {
 		.'modified_data'->insert(#pair)
 	}
-
 
 	public dsinfo => .'dsinfo'
 
@@ -227,10 +227,53 @@ define ds_row => type{
 
 //---------------------------------------------------------------------------------------
 //
+// 	convert lazy row to row
+//
+//---------------------------------------------------------------------------------------
+
+	public merge_after_lazy(ds::ds) => {
+
+		// work with the modified data
+		local(
+			m     = .modified_data,
+			index = .'index' || hashtable,
+			cols  = .'cols'->asarray,
+			row   = .'row'->asarray,
+			i     = 1,
+			p 
+		)
+
+		// Generate column index
+		#m->foreachpair => {
+			#p = #1 
+			#i = #index->find(#1->name)
+
+			if(#i) => {
+				// Just set the value 
+				#row->get(#i) = #p->value 
+			else
+				// Add the index
+				#cols->insert(#p->name)
+				#row->insert(#p->value)
+				#index->insert(#p->name = #cols->size)
+			}
+		}
+
+		// Set new "raw" row data
+		.oncreate(#index, #cols->asstaticarray, #row->asstaticarray, #ds->dsinfo, #ds)
+
+		// Clear modified map
+		.'modified_data' = map 
+
+	}
+
+//---------------------------------------------------------------------------------------
+//
 // 	Retun self as map or array (includes modified data)
 //
 //---------------------------------------------------------------------------------------	
 	
+
 	public asmap => {
 		local(
 			map 		= map,
@@ -278,6 +321,12 @@ protect => {\map}
 define map->forEachNode2 => .forEachNode => givenBlock
 
 define json_serialize(p::ds_row) => json_serialize(#p->asmap)
+
+::json_encode->istype
+? define json_encode->encodeValue(p::ds_row) => .encodeValue(#p->asmap)
+
+::json_encode_utf8->istype
+? define json_encode_utf8->encode(p::ds_row) => .encode(#p->asmap)
 
 
 ?>
