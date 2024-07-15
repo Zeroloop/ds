@@ -10,6 +10,19 @@ define activerow_default_timestamp_format => 'yyyy-MM-dd HH:mm:ss'
 define activerow_default_created_column => ''
 define activerow_default_modified_column => ''
 
+define activerow_mysqlds_lazy_mode => 0
+
+// When enabled DS will get the row using a select statement
+define activerow_mysqlds_lazy_select => activerow_mysqlds_lazy_mode 
+
+// When enabled DS will not reload the row after a ->save (update)
+// This results in signifigant performance gains however auto populated columns 
+define activerow_mysqlds_lazy_update => activerow_mysqlds_lazy_mode
+
+// When enabled DS will not reload the row after a ->save (create)
+// This can result in a signigant performance boost — only the LAST_INSERT_ID will be retrieved (not the rest of the row)
+define activerow_mysqlds_lazy_create => activerow_mysqlds_lazy_mode 
+
 define activerow => type {
 	
 	data
@@ -23,7 +36,11 @@ define activerow => type {
 		public modified_column    = activerow_default_modified_column,
 		public timestamp_format   = activerow_default_timestamp_format,
 		public timestamp_timezone = '',
-		public generate_uuid      = false
+		public generate_uuid      = false,
+
+		public allow_lazy_select = 0, 
+		public allow_lazy_create = 0, 
+		public allow_lazy_update = 0
 
 //---------------------------------------------------------------------------------------
 //
@@ -74,12 +91,28 @@ define activerow => type {
 			fail(-1,'Table not specified, format is active_row(::database.table)')
 		}
 	}
-
-	// getrow should be perhaps renamed here
-
+	
 	public getrow(key::pair,...) => {
-		.row = .ds->getrow(:params)
-		.updatedata(:params)
+
+		local(params) = params
+
+		// Deal with MySQL casting string columns as integers on comparison
+		if(.allow_lazy_select) => {
+			
+			local(where) = (
+				with p in #params 
+				where #p->isa(::pair)
+				select pair(#p->name, #p->value->isa(::integer) ? #p->value->asstring | #p->value)
+			)->asstaticarray 
+
+			.row = .ds->select->where(: #where )->limit(0, 1)->rows->first
+
+		else
+			.row = .ds->getrow(: #params )
+		}
+
+		.updatedata(: #params )
+
 		return self
 	}
 
@@ -88,21 +121,9 @@ define activerow => type {
 		.updatedata(:#keyvalues)		
 	}
 
-	public getrow(keyvalue::string) => {
-		if(#keyvalue) => {
-			.row = .ds->getrow(#keyvalue)
-			.updatedata(.keycolumn = #keyvalue)
-		}
-		return self
-	}
+	public getrow(keyvalue::string) => .getrow(.keycolumn = #keyvalue)
 
-	public getrow(keyvalue::integer) => {
-		if(#keyvalue) => {
-			.row = .ds->getrow(#keyvalue)
-			.updatedata(.keycolumn = #keyvalue)
-		}
-		return self
-	}
+	public getrow(keyvalue::integer) => .getrow(.keycolumn = #keyvalue)
 
 	public getrow => {
 		if(.modified_data->size) => {
@@ -144,18 +165,17 @@ define activerow => type {
 	
 	public isnotnew => ! .isnew
 
+	public allow_lazy_select => (.'allow_lazy_select' || activerow_mysqlds_lazy_select && .ds->datasource == 'mysqlds')
+
+	public allow_lazy_create => (.'allow_lazy_create' || activerow_mysqlds_lazy_create && .ds->datasource == 'mysqlds')
+	
+	public allow_lazy_update => (.'allow_lazy_update' || activerow_mysqlds_lazy_update && .ds->datasource == 'mysqlds')
+
 	public asnew => {
 		local(out) = self->ascopy
 		#out->row->keyvalue = null
 		#out->updatedata(#out->row->asmap)
 		return #out
-	}
-
-	// Ensure key columns are retained
-	public ascopy => {
-		local(copy) = ..ascopy
-		#copy->row->dsinfo->keycolumns = .row->dsinfo->keycolumns
-		return #copy
 	}
 	
 	public table => {
@@ -227,7 +247,8 @@ define activerow => type {
 		// Force row table
 		#row->table = .table 		
 
-		not .isnew ? #row->delete	
+		not .isnew ? #row->delete
+		
 	}
 
 //---------------------------------------------------------------------------------------
@@ -253,6 +274,16 @@ define activerow => type {
 // 	Update internal data and row
 //
 //---------------------------------------------------------------------------------------
+
+	public keyvalue=(p::any) => {
+		if(.row) => {
+			.row->keyvalue = #p 
+		else(.keycolumn)
+			.insert(
+				.keycolumn = #p
+			)
+		}
+	}
 
 	public set(pair::pair) 			=> .update(#pair)
 	public set=(val,col::tag) 		=> .update(#col = #val)
@@ -292,14 +323,33 @@ define activerow => type {
 		.modified_column ? #row->insert(
 			.modified_column = #now->format(.timestamp_format)
 		)
-		
+
 		// Patch lost rows — normally from ds(::database)->rows
 		! #row->table && .table ? #row->table = .table 
 
-		// Only update when modified (perhaps the above shouldn't be considered)/
-		#row->update
-		
+		if(.allow_lazy_update && .row->keyvalues->size) => {
+			// Only execute the update, don't retrieve the changed row
+			.ds->update_statement->set( .modified_data )->where( .row->keyvalues )->do_when_where 
+
+			// Merge the modified stack
+			#row->merge_after_lazy(.ds)
+		else 	
+			// Only update when modified (perhaps the above shouldn't be considered)
+			#row->update
+		}
 	}
+
+	public update_lazy(...) => {
+
+		local(
+			params = params
+		)
+
+		.do_lazy => {
+			// Call standard save
+			return .update(: #params )
+		}
+	}	
 
 //---------------------------------------------------------------------------------------
 //
@@ -345,15 +395,49 @@ define activerow => type {
 			#row->keycolumn = null
 		)		
 
-		#row = .ds->addrow(.table,#row->modified_data)
+		if(.allow_lazy_create) => {
+			
+			// Store the blank row
+			.row = #row 
 
-		// If keyvalue is forced we must load the row
-		if(!#row && #key && !.keyvalue) => {
-			#row = .ds->getfrom(.table,.keycolumn = #key)->first
+			// Only execute the insert, don't retrieve the new row
+			local(keyvalue) = .ds->sql(
+				.ds->insert_statement->values( .modified_data )->statement + '; SELECT LAST_INSERT_ID() as ID'
+					)->lastrow(::ID)
+
+			// Add the new keyvalue
+			#row->insert(
+				.keycolumn = #keyvalue
+			)
+
+			// Merge the modified stack
+			#row->merge_after_lazy(.ds) 
+
+		else 	
+			#row = .ds->addrow(.table, #row->modified_data)
+
+			// If keyvalue is forced we must load the row
+			if(!#row && #key && !.keyvalue) => {
+				#row = .ds->getfrom(.table, .keycolumn = #key)->first
+			}
+
+			#row ? .'row' := #row | fail('Unable to create row (ensure correct ->keycolumn(\'name\') is specified)')
 		}
 
-		#row ? .'row' := #row | fail('Unable to create row (ensure correct ->keycolumn(\'name\') is specified)')
 	}
+
+
+	public create_lazy(...) => {
+
+		local(
+			params = params
+		)
+
+		.do_lazy => {
+			// Call standard save
+			return .create(: #params )
+		}
+	}	
 		
 //---------------------------------------------------------------------------------------
 //
@@ -380,8 +464,49 @@ define activerow => type {
 			.create
 		}
 		return self
+	}
+
+	public save_lazy(...) => {
+
+		local(
+			params = params
+		)
+
+		.do_lazy => {
+			// Call standard save
+			return .save(: #params )
+		}
 	}	
-	
+
+//---------------------------------------------------------------------------------------
+//
+// 	Force lazy behaviour
+//
+//---------------------------------------------------------------------------------------
+
+	public do_lazy => {
+
+		local(
+			// Set locals to restore
+			allow_lazy_create = .'allow_lazy_create',
+			allow_lazy_update = .'allow_lazy_update',
+			gb                = givenblock
+		)
+
+		handle => {
+			// Restore data attributes
+			.allow_lazy_create = #allow_lazy_create
+			.allow_lazy_update = #allow_lazy_update
+		}
+
+		// Override data attributes
+		.allow_lazy_create = 1
+		.allow_lazy_update = 1	
+
+		return #gb()	
+
+	}
+
 //---------------------------------------------------------------------------------------
 //
 // 	Friendly accessors
@@ -392,6 +517,7 @@ define activerow => type {
 	public invoke(col::string) 		=> .row->find(#col)
 	public invoke=(val,col::tag) 	=> { .row->find(#col->asstring) = #val }
 	public invoke=(val,col::string) => { .row->find(#col) = #val }
+
 	
 	public find(col::tag) 			=> .row->find(#col->asstring)
 	public find(col::string) 		=> .row->find(#col)
