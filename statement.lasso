@@ -71,8 +71,8 @@ define statement => type {
 	public as(meth::memberstream)	=> .invoke->rows(#meth) => givenblock
 
 
-	public do					=> .invoke => givenblock
-	public do(c::capture)		=> #c(.invoke->last)
+	public do             => .invoke => givenblock
+	public do(c::capture) => #c(.invoke->last)
 	
 //---------------------------------------------------------------------------------------
 //
@@ -127,7 +127,7 @@ define statement => type {
 
 	public encode(item::pair) => {
 		local(delim) = (#item->value->isanyof(::array,::staticarray) ? ' ' | (#item->value->isa(::null) ? ' IS ' | ' = '))
-		return #item->name->asstring + #delim + .encode(#item->value)
+		return .encodecol(#item->name->asstring) + #delim + .encode(#item->value)
 	}
 	
 	public encodecol(col::tag) => .encodecol(#col->asstring)
@@ -183,7 +183,7 @@ define select_statement => type {
 	public oncreate(ds::ds) => {
 		.'ds' = #ds 
 		.'copyself' = true
-		return .from(#ds->dsinfo->tablename)
+		return .from('`' + #ds->dsinfo->tablename + '`')
 	}
 
 
@@ -396,7 +396,9 @@ define insert_statement => type {
 	public oncreate(ds::ds) => {
 		.'ds' = #ds 
 		.'copyself' = true
-		return .into(#ds->dsinfo->tablename)
+
+
+		return .into('`' + #ds->dsinfo->tablename + '`')
 	}
 	
 	public into(table::string,...columns)             => .switch(::into,array(#table))->merge(::columns,#columns || staticarray) => givenblock	
@@ -414,6 +416,7 @@ define insert_statement => type {
 				.'into'->insertfrom(#values)
 			case(::columns)
 				.'columns'->insertfrom(#values)
+				.'columns'->removeall(void)
 			case(::values)
 				.'values'->insertfrom(#values)
 			case(::update)
@@ -433,8 +436,8 @@ define insert_statement => type {
 		| ''
 	}
 
-	public values		=> .ifsize(.'values',		'VALUES ',',\n')
-	public onduplicate	=> .ifsize(.'onduplicate',	'ON DUPLICATE KEY UPDATE ',',\n')
+	public values		=> .ifsize(.'values',		' VALUES ',',\n')
+	public onduplicate	=> .ifsize(.'onduplicate',	' ON DUPLICATE KEY UPDATE ',',\n')
 
 	public insertevery(rows::integer) => {
 		.insertevery = #rows
@@ -452,15 +455,8 @@ define insert_statement => type {
 	public addrow(p::pair,...) => {
 		local(r) = map
 		with p in params do {
-			#p->isa(::pair) ? #r->insert(#p)
-		}
-		return .addrow(#r) => givenblock
-	}
-
-	public addrow(p1::any,p2::any,...) => {
-		local(r) = array
-		with p in params do {
-			#r->insert(#p)
+			#p->isa(::pair) 
+			? #r->insert(#p)
 		}
 		return .addrow(#r) => givenblock
 	}
@@ -533,6 +529,17 @@ define insert_statement => type {
 		.addrows(#rows)
 		return .invokeifblock => givenblock
 	}
+
+	public values(row::map) => {
+		.addrow(#row)
+		return .invokeifblock => givenblock
+	}
+
+	public values(p::pair, ...) => {
+		.addrow(: params)
+		return .invokeifblock => givenblock
+	}
+
 
 //---------------------------------------------------------------------------------------
 //
@@ -621,16 +628,16 @@ define update_statement => type {
 	parent statement
 
 	data
-		public	update::trait_positionallykeyed 	= array,
-		public	join::trait_positionallykeyed 	= array,
-		public	set::trait_positionallykeyed 		= array,
-		public	where::trait_positionallykeyed 	= array 
+		public	update::trait_positionallykeyed = array,
+		public	join::trait_positionallykeyed   = array,
+		public	set::trait_positionallykeyed    = array,
+		public	where::trait_positionallykeyed  = array 
 
 	public oncreate => {}
 	public oncreate(ds::ds) => {
 		.'ds' = #ds 
 		.'copyself' = true
-		return .update(#ds->dsinfo->tablename)
+		return .update('`' + #ds->dsinfo->tablename + '`')
 	}
 
 //---------------------------------------------------------------------------------------
@@ -660,7 +667,11 @@ define update_statement => type {
 		}		
 		return .invokeifblock => givenblock
 	}
-	
+	public set(expr::trait_keyedForEach) => .set(: #expr->eachpair->asstaticarray )
+	public set(expr::array)              => .set(: #expr->asstaticarray )
+	public set(expr::staticarray)        => .set(: #expr)
+
+
 	public join(table::string,...) 		=> .merge(::join,params) => givenblock
 	public where(expr::string,...)		=> .where(params) => givenblock
 	public where(expr::pair,...)		=> .where(params) => givenblock
@@ -668,10 +679,24 @@ define update_statement => type {
 	public where(p::staticarray)		=> {
 
 		with item in #p do {
+
+			// pair and keywords
 			if(#item->isanyof(::pair,::keyword)) => {
-				.'where'->insert(.encode(#item))
+				.'where'->insert(
+					.encode(#item)
+				)
+
+			// raw sql
 			else(#item->isa(::string) && #item)
 				.'where'->insert(#item)
+
+			// ds_row->keyvalues 
+			else(#item->isa(::staticarray) && #item->size == 3) 
+				.'where'->insert(
+					.encode(
+						#item->get(1) = #item->get(3)
+					)
+				)
 			}
 		}		
 		
@@ -713,6 +738,8 @@ define update_statement => type {
 //---------------------------------------------------------------------------------------
 
 	public statement => .update + .join + .set + .where 
+
+	public do_when_where  => .'where'->size ? .invoke => givenblock	
 
 }
 
