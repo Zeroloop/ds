@@ -97,6 +97,8 @@ define statement => type {
 
 	public encode(val::any) => {
 		match(#val->type) => {
+			case(::tag)
+				return .encodecol(#val)
 			case(::decimal)
 				return #val->asstring
 			case(::integer)
@@ -108,8 +110,8 @@ define statement => type {
 			case(::void)
 				return 'NULL'
 			case(::bytes)
-				return '0x' + #val->encodehex
-			case(::array,::staticarray)
+				return '0x' + (#val->encodehex || '0')
+			case(::array, ::staticarray)
 				local(out) = ''
 				#out->append('IN(')
 				#val->foreach => {
@@ -121,7 +123,7 @@ define statement => type {
 				#out->append(')')
 				return #out		
 			case
-				return `'`+string(#val)->encodesql+`'`
+				return `'` + string(#val)->encodesql + `'`
 		}
 	}
 
