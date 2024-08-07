@@ -168,18 +168,21 @@ define statement => type {
 //
 //---------------------------------------------------------------------------------------
 
+
 define select_statement => type {
 	parent statement
 
 	data
-		public	select::trait_positionallykeyed 	= array,
-		public	from::trait_positionallykeyed 	= array,
-		public	join::trait_positionallykeyed 	= array,
-		public	where::trait_positionallykeyed 	= array,
-		public	groupby::trait_positionallykeyed 	= array,
-		public	having::trait_positionallykeyed 	= array,
-		public	orderby::trait_positionallykeyed 	= array,
-		public	limit::trait_positionallykeyed 	= array
+		public	with::trait_positionallykeyed    = array,
+		public	select::trait_positionallykeyed  = array,
+		public	from::trait_positionallykeyed    = array,
+		public	join::trait_positionallykeyed    = array,
+		public	where::trait_positionallykeyed   = array,
+		public	groupby::trait_positionallykeyed = array,
+		public	having::trait_positionallykeyed  = array,
+		public	orderby::trait_positionallykeyed = array,
+		public	limit::trait_positionallykeyed   = array,
+		public	union::trait_positionallykeyed   = array
 
 	public oncreate => {}
 	public oncreate(ds::ds) => {
@@ -209,13 +212,32 @@ define select_statement => type {
 //
 //---------------------------------------------------------------------------------------
 
+	/*
+	->select
+	->from('tmp')
+	->with('tmp', 'SELECT * FROM example')
+	*/
+
+	public with(name::string, sql::string) => .with(#name = #sql) => givenblock
+	public with(name::string, statement::select_statement) => .with(#name = #statement->statement) => givenblock
+    public with(p::pair, ...) => .with(params) => givenblock
+	public with(p::staticarray) => {
+	    
+	    with item in #p 
+	    do {
+    		.'with'->insert(
+    			'`' + #item->name->asstring->encodesql + '` AS (\n' + (#item->value->isa(::select_statement) ? #item->value->statement | #item->value) + '\n)'
+    		)
+	    }
+		return .invokeifblock => givenblock
+	}
+
 	public select(column::tag,...) 		=> .switch(::select,params) => givenblock
 	public select(columns::array) 		=> .switch(::select,#columns) => givenblock
 	public select(columns::string,...) 	=> .switch(::select,params) => givenblock
 
 	public from(tables::array) 			=> .switch(::from,#tables) => givenblock
 	public join(tables::array) 			=> .switch(::join,#tables) => givenblock
-//	public where(expr::array)			=> .switch(::where,#expr) => givenblock
 	public groupby(columns::array) 		=> .switch(::groupby,#columns) => givenblock
 	public having(expr::array)			=> .switch(::having,#expr) => givenblock
 	public orderby(columns::array) 		=> .switch(::orderby,#columns) => givenblock
@@ -240,12 +262,71 @@ define select_statement => type {
 		| return .invokeifblock => givenblock
 	}
 
+	public from(table::tag,...) 		=> .switch(::from, params->asarray) => givenblock
+	public from(table::string,...) 		=> .switch(::from, params->asarray) => givenblock
 
-	public from(table::tag,...) 		=> .switch(::from,params->asarray) => givenblock
-	public from(table::string,...) 		=> .switch(::from,params->asarray) => givenblock
+	public join(table::string,...)      => .join(-table = #table, -jointype = 'JOIN'       , -on = #rest || staticarray) => givenblock
+	public innerjoin(table::string,...) => .join(-table = #table, -jointype = 'INNER JOIN' , -on = #rest || staticarray) => givenblock
+	public leftjoin(table::string,...)  => .join(-table = #table, -jointype = 'LEFT JOIN'  , -on = #rest || staticarray) => givenblock
+	public rightjoin(table::string,...) => .join(-table = #table, -jointype = 'RIGHT JOIN' , -on = #rest || staticarray) => givenblock
+	public outerjoin(table::string,...) => .join(-table = #table, -jointype = 'OUTER JOIN' , -on = #rest || staticarray) => givenblock
 
-	public join(table::string,...) => .merge(::join,params) => givenblock
+	/*
 
+		# No aliases 
+		->select
+		->from(::code)
+		->join(::projects, ::project.id = ::code.project_id)
+
+		# With aliases
+		->select
+		->from('code as c')
+		->join('projects as p', ::p.id = ::c.project_id)
+
+	*/
+
+	public join(table::tag,...)      => .join(-table = .encode(#table), -jointype = 'JOIN'       , -on = #rest || staticarray) => givenblock
+	public innerjoin(table::tag,...) => .join(-table = .encode(#table), -jointype = 'INNER JOIN' , -on = #rest || staticarray) => givenblock
+	public leftjoin(table::tag,...)  => .join(-table = .encode(#table), -jointype = 'LEFT JOIN'  , -on = #rest || staticarray) => givenblock
+	public rightjoin(table::tag,...) => .join(-table = .encode(#table), -jointype = 'RIGHT JOIN' , -on = #rest || staticarray) => givenblock
+	public outerjoin(table::tag,...) => .join(-table = .encode(#table), -jointype = 'OUTER JOIN' , -on = #rest || staticarray) => givenblock
+
+
+	/*
+
+		# Join query
+		->select
+		->from(::code)
+		->join(::example = 'SELECT * FROM code', ::code.id = ::example.id, ::example.id = 1)
+
+	*/
+
+
+	public join(p::pair, ...) => .join('(' + (#p->value->isa(::select_statment) ? #p->value->statement | #p->value->asstring)  + ') as ' .encode(#p->name), -jointype = 'INNER JOIN' , -on = #rest || staticarray) => givenblock
+
+
+
+	public join(
+		-table::string,
+		-jointype::string,
+		-on::trait_foreach
+	) => {
+		.'join'->insert(
+			#jointype + ' ' + #table + (
+				#on->size 
+				? ' ON ' + (
+					with item in #on 
+					where #item->isnota(::keyword)
+					select #item->isa(::pair)
+					? .encode(#item->name = #item->value)
+					| #item
+				)->join(' AND ')
+				| ''
+			)
+		)
+		return .invokeifblock => givenblock
+	}
+	
 	public where(expr::string,...) => .where(params) => givenblock
 	public where(expr::pair,...)   => .where(params) => givenblock
 	public where(p::array)         => .where(#p->asstaticarray) => givenblock
@@ -282,6 +363,24 @@ define select_statement => type {
 	public limit(expr::string) 					=> .switch(::limit,array(#expr)) => givenblock
 	public limit(max::integer) 					=> .switch(::limit,array('0,'+#max)) => givenblock
 	public limit(start::integer,max::integer) 	=> .switch(::limit,array(#start + ','+#max)) => givenblock
+
+	public union(sql::string, ...) => .union(params) => givenblock
+	public union(statement::select_statement, ...) => .union(params) => givenblock
+
+	public union(p::staticarray) => {
+
+		with item in #p
+		where #item
+		do {
+			.'union'->insert(
+				#item->isa(::select_statement)
+				? #item->statement
+				| #item->asstring
+			)
+		}
+		return .invokeifblock => givenblock
+	}
+
 
 //---------------------------------------------------------------------------------------
 //
@@ -331,14 +430,16 @@ define select_statement => type {
 //
 //---------------------------------------------------------------------------------------
 		
-	public select	=> .ifsize(.'select',	'SELECT ',	',') || 'SELECT * '
-	public from		=> .ifsize(.'from',		'FROM ',	', ')
-	public join		=> .ifsize(.'join',		'JOIN ',	'\nJOIN ')
-	public where	=> .ifsize(.'where',	'WHERE ',	' AND ')
-	public groupby	=> .ifsize(.'groupby',	'GROUP BY ',	', ')
-	public having	=> .ifsize(.'having',	'HAVING ',	' AND ')
-	public orderby	=> .ifsize(.'orderby',	'ORDER BY ',	', ')
-	public limit	=> .ifsize(.'limit',	'LIMIT ',)
+	public with    => .ifsize(.'with',    'WITH \n',	',\n') || ''
+	public select  => .ifsize(.'select',  'SELECT ',	',') || 'SELECT * '
+	public from    => .ifsize(.'from',    'FROM ',	', ')
+	public join    => .ifsize(.'join',    '',	'\n')
+	public where   => .ifsize(.'where',   'WHERE ',	' AND ')
+	public groupby => .ifsize(.'groupby', 'GROUP BY ',	', ')
+	public having  => .ifsize(.'having',  'HAVING ',	' AND ')
+	public orderby => .ifsize(.'orderby', 'ORDER BY ',	', ')
+	public limit   => .ifsize(.'limit',   'LIMIT ',)
+	public union   => .ifsize(.'union',   '\nUNION\n' , '\nUNION\n')
 
 	public merge(target::tag,values::staticarray) => {
 
@@ -370,7 +471,7 @@ define select_statement => type {
 //
 //---------------------------------------------------------------------------------------
 
-	public statement => .select + .from + .join + .where + .groupby + .having + .orderby + .limit
+	public statement => .with + .select + .from + .join + .where + .groupby + .having + .orderby + .limit + .union
 
 }
 
@@ -677,7 +778,6 @@ define update_statement => type {
 	public join(table::string,...) 		=> .merge(::join,params) => givenblock
 	public where(expr::string,...)		=> .where(params) => givenblock
 	public where(expr::pair,...)		=> .where(params) => givenblock
-
 	public where(p::staticarray)		=> {
 
 		with item in #p do {
